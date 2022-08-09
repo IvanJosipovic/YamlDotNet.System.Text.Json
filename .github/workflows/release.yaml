@@ -21,10 +21,10 @@ jobs:
       with:
         global-json-file: src/global.json
 
-    - name: Dotnet Build
+    - name: .NET Build
       run: dotnet build -c Release
 
-    - name: Dotnet Test
+    - name: .NET Test
       run: dotnet test -c Release
 
     - name: Semantic Release
@@ -35,12 +35,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Dotnet Pack
+    - name: .NET Pack
       if: steps.semantic.outputs.new_release_published == 'true'
       working-directory: src/YamlDotNet.System.Text.Json
       run: dotnet pack -c Release -p:Version=${{ steps.semantic.outputs.new_release_version }}
 
-    - name: Dotnet NuGet Push
+    - name: .NET NuGet Push
       if: steps.semantic.outputs.new_release_published == 'true'
       working-directory: src/YamlDotNet.System.Text.Json/bin/Release
       run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
