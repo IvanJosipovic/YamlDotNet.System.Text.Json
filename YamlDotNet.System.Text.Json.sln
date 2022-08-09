@@ -5,7 +5,13 @@ VisualStudioVersion = 17.3.32728.150
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YamlDotNet.System.Text.Json", "src\YamlDotNet.System.Text.Json\YamlDotNet.System.Text.Json.csproj", "{3AF4A705-BD93-4C96-899C-D5598E9675F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YamlDotNet.System.Text.Json.Tests", "src\YamlDotNet.System.Text.Json.Tests\YamlDotNet.System.Text.Json.Tests.csproj", "{97845B58-8CB8-49A1-9088-1DA8269306E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YamlDotNet.System.Text.Json.Tests", "src\YamlDotNet.System.Text.Json.Tests\YamlDotNet.System.Text.Json.Tests.csproj", "{97845B58-8CB8-49A1-9088-1DA8269306E6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7298B6B7-1C59-4B8E-A6E8-E9F0B7DA660D}"
+	ProjectSection(SolutionItems) = preProject
+		src\global.json = src\global.json
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
