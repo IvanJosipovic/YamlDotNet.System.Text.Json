@@ -14,7 +14,7 @@ namespace YamlDotNet.System.Text.Json
     {
         public bool Accepts(Type type)
         {
-            return type == typeof(JsonNode) || type == typeof(JsonArray) || type == typeof(JsonObject) || type == typeof(JsonValue) || type.BaseType == typeof(JsonValue);
+            return type == typeof(JsonNode) || type == typeof(JsonArray) || type == typeof(JsonObject) || type == typeof(JsonValue) || type?.BaseType == typeof(JsonValue) || type.BaseType?.BaseType == typeof(JsonValue);
         }
 
         public object? ReadYaml(IParser parser, Type type)
@@ -24,17 +24,21 @@ namespace YamlDotNet.System.Text.Json
 
         public void WriteYaml(IEmitter emitter, object? value, Type type)
         {
-            if (type == typeof(JsonValue) || type.BaseType == typeof(JsonValue))
+            if (type == typeof(JsonValue) || type?.BaseType == typeof(JsonValue) || type.BaseType?.BaseType == typeof(JsonValue))
             {
                 WriteValue(emitter, value);
             }
-            else if (type == typeof(JsonObject) || type.BaseType == typeof(JsonObject))
+            else if (type == typeof(JsonObject) || type?.BaseType == typeof(JsonObject) || type?.BaseType?.BaseType == typeof(JsonObject))
             {
                 WriteObject(emitter, value);
             }
-            else if (type == typeof(JsonArray) || type.BaseType == typeof(JsonArray))
+            else if (type == typeof(JsonArray) || type?.BaseType == typeof(JsonArray) || type?.BaseType?.BaseType == typeof(JsonArray))
             {
                 WriteArray(emitter, value);
+            }
+            else
+            {
+                //Shouldn't be here!
             }
         }
 
@@ -42,12 +46,12 @@ namespace YamlDotNet.System.Text.Json
         {
             emitter.Emit(new MappingStart(null, null, false, MappingStyle.Any));
 
-            JsonObject obj = (JsonObject)value;
-
-            foreach (var property in obj)
+            foreach (var property in (JsonObject)value)
             {
                 JsonNode propVal = property.Value;
+
                 emitter.Emit(new Scalar(null, property.Key));
+
                 WriteYaml(emitter, propVal, propVal.GetType());
             }
 
@@ -56,7 +60,9 @@ namespace YamlDotNet.System.Text.Json
 
         private void WriteValue(IEmitter emitter, object value)
         {
+            JsonNode obj = (JsonNode)value;
 
+            emitter.Emit(new Scalar(obj.ToString()));
         }
 
         private void WriteArray(IEmitter emitter, object value)
