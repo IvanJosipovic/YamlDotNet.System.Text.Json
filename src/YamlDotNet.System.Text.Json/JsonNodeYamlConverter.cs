@@ -1,10 +1,7 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Xml.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
-using YamlDotNet.Core.Tokens;
 using YamlDotNet.Serialization;
 using Scalar = YamlDotNet.Core.Events.Scalar;
 
@@ -14,7 +11,10 @@ namespace YamlDotNet.System.Text.Json
     {
         public bool Accepts(Type type)
         {
-            return type == typeof(JsonNode) || type == typeof(JsonArray) || type == typeof(JsonObject) || type == typeof(JsonValue) || type?.BaseType == typeof(JsonValue) || type.BaseType?.BaseType == typeof(JsonValue);
+            return type.IsAssignableTo(typeof(JsonNode))
+                || type.IsAssignableTo(typeof(JsonArray))
+                || type.IsAssignableTo(typeof(JsonObject))
+                || type.IsAssignableTo(typeof(JsonValue));
         }
 
         public object? ReadYaml(IParser parser, Type type)
@@ -24,21 +24,22 @@ namespace YamlDotNet.System.Text.Json
 
         public void WriteYaml(IEmitter emitter, object? value, Type type)
         {
-            if (type == typeof(JsonValue) || type?.BaseType == typeof(JsonValue) || type.BaseType?.BaseType == typeof(JsonValue))
+            if (type.IsAssignableTo(typeof(JsonValue)))
             {
                 WriteValue(emitter, value);
             }
-            else if (type == typeof(JsonObject) || type?.BaseType == typeof(JsonObject) || type?.BaseType?.BaseType == typeof(JsonObject))
+            else if (type.IsAssignableTo(typeof(JsonObject)))
             {
                 WriteObject(emitter, value);
             }
-            else if (type == typeof(JsonArray) || type?.BaseType == typeof(JsonArray) || type?.BaseType?.BaseType == typeof(JsonArray))
+            else if (type.IsAssignableTo(typeof(JsonArray)))
             {
                 WriteArray(emitter, value);
             }
             else
             {
                 //Shouldn't be here!
+                throw new Exception("Unknown Type :" + type.FullName);
             }
         }
 
@@ -60,9 +61,53 @@ namespace YamlDotNet.System.Text.Json
 
         private void WriteValue(IEmitter emitter, object value)
         {
-            JsonNode obj = (JsonNode)value;
+            var obj = ((JsonValue)value).GetValue<JsonElement>();
 
-            emitter.Emit(new Scalar(obj.ToString()));
+            switch (obj.ValueKind)
+            {
+                case JsonValueKind.Undefined:
+                case JsonValueKind.Object:
+                case JsonValueKind.Array:
+                    throw new NotImplementedException();
+                case JsonValueKind.String:
+                    var val = obj.ToString();
+
+                    if (val.IndexOf("\n") > 0)
+                    {
+                        // force it to be multi-line literal (aka |)
+                        emitter.Emit(new Scalar(null, null, val, ScalarStyle.Literal, true, true));
+                    }
+                    else
+                    {
+                        // if string could be interpreted as a non-string value type, put quotes around it.
+                        if (val == "null" ||
+                            long.TryParse(val, out var _) ||
+                            float.TryParse(val, out var _) ||
+                            decimal.TryParse(val, out var _) ||
+                            bool.TryParse(val, out var _))
+                        {
+                            emitter.Emit(new Scalar(null, null, val, ScalarStyle.SingleQuoted, true, true));
+                        }
+                        else
+                        {
+                            emitter.Emit(new Scalar(val));
+                        }
+                    }
+                    break;
+                case JsonValueKind.Number:
+                    emitter.Emit(new Scalar(obj.ToString()));
+                    break;
+                case JsonValueKind.True:
+                case JsonValueKind.False:
+                    emitter.Emit(new Scalar(obj.ToString().ToLower()));
+                    break;
+                case JsonValueKind.Null:
+                    emitter.Emit(new Scalar(null, "null"));
+                    break;
+                default:
+                    emitter.Emit(new Scalar(obj.ToString()));
+                    break;
+            }
         }
 
         private void WriteArray(IEmitter emitter, object value)
