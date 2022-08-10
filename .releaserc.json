@@ -20,6 +20,9 @@
         "assets": [
           {
             "path": "CHANGELOG.md"
+          },
+          {
+            "path": "src/YamlDotNet.System.Text.Json/bin/Release/*.nupkg"
           }
         ]
       }
