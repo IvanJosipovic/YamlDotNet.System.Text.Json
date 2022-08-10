@@ -9,6 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YamlDotNet.System.Text.Json
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7298B6B7-1C59-4B8E-A6E8-E9F0B7DA660D}"
 	ProjectSection(SolutionItems) = preProject
+		.releaserc.json = .releaserc.json
 		global.json = global.json
 		README.md = README.md
 		.github\workflows\release.yaml = .github\workflows\release.yaml
