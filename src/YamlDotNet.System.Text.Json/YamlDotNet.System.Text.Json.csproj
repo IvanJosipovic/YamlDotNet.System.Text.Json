@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-	  <LangVersion>latest</LangVersion>
-	  <ImplicitUsings>enable</ImplicitUsings>
+      <LangVersion>latest</LangVersion>
+      <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <AnalysisMode>AllEnabledByDefault</AnalysisMode>
       <PackageId>YamlDotNet.System.Text.Json</PackageId>
@@ -16,13 +16,13 @@
       <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
-    <ItemGroup>
+  <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="6.0.5" />
     <PackageReference Include="YamlDotNet" Version="12.0.0" />
-    </ItemGroup>
+  </ItemGroup>
 
-    <ItemGroup>
+  <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    </ItemGroup>
+  </ItemGroup>
 
 </Project>
