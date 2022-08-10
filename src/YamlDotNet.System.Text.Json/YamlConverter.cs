@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-using YamlDotNet.Serialization;
+﻿using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json
 {
@@ -16,16 +14,16 @@ namespace YamlDotNet.System.Text.Json
                 .WithTypeConverter(new JsonNodeYamlConverter())
                 .Build();
 
-        public static string Serialize(JsonNode jsonNode, ISerializer? serializer = null)
+        public static string Serialize(object obj, ISerializer? serializer = null)
         {
             serializer ??= DefaultSerializer;
-            return serializer.Serialize(jsonNode);
+            return serializer.Serialize(obj);
         }
 
-        public static JsonNode Deserialize(string yaml, IDeserializer? deserializer = null)
+        public static T Deserialize<T>(string yaml, IDeserializer? deserializer = null)
         {
             deserializer ??= DefaultDeserializer;
-            return deserializer.Deserialize<JsonNode>(yaml);
+            return deserializer.Deserialize<T>(yaml);
         }
     }
 }
