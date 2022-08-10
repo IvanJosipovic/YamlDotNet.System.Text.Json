@@ -11,10 +11,10 @@ namespace YamlDotNet.System.Text.Json
     {
         public bool Accepts(Type type)
         {
-            return type.IsAssignableTo(typeof(JsonNode))
-                || type.IsAssignableTo(typeof(JsonArray))
-                || type.IsAssignableTo(typeof(JsonObject))
-                || type.IsAssignableTo(typeof(JsonValue));
+            return typeof(JsonNode).IsAssignableFrom(type)
+                || typeof(JsonArray).IsAssignableFrom(type)
+                || typeof(JsonObject).IsAssignableFrom(type)
+                || typeof(JsonValue).IsAssignableFrom(type);
         }
 
         public object? ReadYaml(IParser parser, Type type)
@@ -24,15 +24,15 @@ namespace YamlDotNet.System.Text.Json
 
         public void WriteYaml(IEmitter emitter, object? value, Type type)
         {
-            if (type.IsAssignableTo(typeof(JsonValue)))
+            if (typeof(JsonValue).IsAssignableFrom(type))
             {
                 WriteValue(emitter, value);
             }
-            else if (type.IsAssignableTo(typeof(JsonObject)))
+            else if (typeof(JsonObject).IsAssignableFrom(type))
             {
                 WriteObject(emitter, value);
             }
-            else if (type.IsAssignableTo(typeof(JsonArray)))
+            else if (typeof(JsonArray).IsAssignableFrom(type))
             {
                 WriteArray(emitter, value);
             }
