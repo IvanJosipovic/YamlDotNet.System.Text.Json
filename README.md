@@ -5,7 +5,7 @@
 
 ## What is this?
 
-This project contains a [IYamlTypeConverter](https://github.com/aaubry/YamlDotNet/wiki/Serialization.Serializer#withtypeconverteriyamltypeconverter) which can convert System.Text.Json objects to YAML ~~and back~~(not implemented yet).
+This project contains a [IYamlTypeConverter](https://github.com/aaubry/YamlDotNet/wiki/Serialization.Serializer#withtypeconverteriyamltypeconverter) which can convert System.Text.Json objects to YAML and back.
 
 Supported Objects:
 

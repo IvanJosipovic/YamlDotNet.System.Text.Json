@@ -1,7 +1,9 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
+using YamlDotNet.Core.Tokens;
 using YamlDotNet.Serialization;
 using Scalar = YamlDotNet.Core.Events.Scalar;
 
@@ -19,7 +21,124 @@ namespace YamlDotNet.System.Text.Json
 
         public object? ReadYaml(IParser parser, Type type)
         {
-            throw new NotImplementedException();
+            if (typeof(JsonValue).IsAssignableFrom(type))
+            {
+                return ReadValue(parser);
+            }
+            else if (typeof(JsonArray).IsAssignableFrom(type))
+            {
+                return ReadArray(parser);
+            }
+            else if (typeof(JsonObject).IsAssignableFrom(type) || typeof(JsonNode).IsAssignableFrom(type))
+            {
+                return ReadObject(parser);
+            }
+            else
+            {
+                //Shouldn't be here!
+                throw new Exception("Unknown Type :" + type.FullName);
+            }
+        }
+
+        private object ReadValue(IParser parser)
+        {
+            if (parser.TryConsume<Scalar>(out var scalar))
+            {
+                if (scalar.Style == ScalarStyle.Plain)
+                {
+                    if (long.TryParse(scalar.Value, out var i))
+                    {
+                        return JsonValue.Create(i);
+                    }
+                    else if (float.TryParse(scalar.Value, out var f))
+                    {
+                        return JsonValue.Create(f);
+                    }
+                    else if (bool.TryParse(scalar.Value, out var b))
+                    {
+                        return JsonValue.Create(b);
+                    }
+                    else if (scalar.Value == "null")
+                    {
+                        return JsonValue.Create((object)null);
+                    }
+                    else if (scalar.Value.GetType() == typeof(string))
+                    {
+                        return JsonValue.Create(scalar.Value);
+                    }
+                }
+                else if (scalar.Style == ScalarStyle.SingleQuoted)
+                {
+                    return JsonValue.Create(scalar.Value);
+                }
+            }
+
+            return null;
+        }
+
+        private object ReadObject(IParser parser)
+        {
+            var value = ReadValue(parser);
+
+            if (value != null)
+            {
+                return value;
+            }
+
+            var node = new JsonObject();
+
+            if (parser.TryConsume<MappingStart>(out var start))
+            {
+                while (!parser.Accept<MappingEnd>(out var end))
+                {
+                    var name = parser.Consume<Scalar>();
+
+                    if (parser.Accept<Scalar>(out var scalar))
+                    {
+                        node[name.Value] = (JsonValue)ReadYaml(parser, typeof(JsonValue));
+                    }
+                    else if (parser.Accept<MappingStart>(out var mapStart))
+                    {
+                        node[name.Value] = (JsonObject)ReadYaml(parser, typeof(JsonObject));
+                    }
+                    else if (parser.Accept<SequenceStart>(out var seqStart))
+                    {
+                        node[name.Value] = (JsonArray)ReadYaml(parser, typeof(JsonArray));
+                    }
+                }
+
+                parser.Consume<MappingEnd>();
+            }
+
+            return node;
+        }
+
+        private object ReadArray(IParser parser)
+        {
+            var array = new JsonArray();
+
+            if (parser.TryConsume<SequenceStart>(out var start))
+            {
+                while (!parser.Accept<SequenceEnd>(out var end))
+                {
+                    if (parser.Accept<Scalar>(out var scalar))
+                    {
+                        array.Add((JsonValue)ReadYaml(parser, typeof(JsonValue)));
+                    }
+                    else if (parser.Accept<MappingStart>(out var mapStart))
+                    {
+                        array.Add((JsonObject)ReadYaml(parser, typeof(JsonObject)));
+                    }
+                    else if (parser.Accept<SequenceStart>(out var seqStart))
+                    {
+                        array.Add((JsonArray)ReadYaml(parser, typeof(JsonArray)));
+                    }
+                }
+
+                parser.Consume<SequenceEnd>();
+            }
+
+            return array;
         }
 
         public void WriteYaml(IEmitter emitter, object? value, Type type)
