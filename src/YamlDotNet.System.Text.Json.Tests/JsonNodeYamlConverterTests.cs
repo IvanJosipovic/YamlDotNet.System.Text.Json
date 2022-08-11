@@ -18,7 +18,7 @@ public class JsonNodeYamlConverterTests
     [InlineData("\"\"")]
     public void JsonValueTests(string val)
     {
-        var input = JsonValue.Parse(val);
+        var input = JsonNode.Parse(val).AsValue();
 
         var yaml = YamlConverter.Serialize(input);
 
@@ -46,6 +46,7 @@ public class JsonNodeYamlConverterTests
     [InlineData("\"test\\ntest2\\ntest3\"")]
     [InlineData("true")]
     [InlineData("false")]
+    [InlineData("{\r\n \"url\": \"{\\\"config\\\":{\\\"entries\\\":[{\\\"url\\\":\\\"http://service.svc.cluster.local:7002/policy-data\\\",\\\"topics\\\":[\\\"policy_data\\\"]}]}}\"\r\n}")]
     public void JsonNodeTests(string val)
     {
         var input = JsonNode.Parse(val);
@@ -69,7 +70,7 @@ public class JsonNodeYamlConverterTests
     [InlineData("{\"Temperatures\": [[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]}")]
     public void JsonObjectTests(string val)
     {
-        var input = JsonNode.Parse(val);
+        var input = JsonNode.Parse(val).AsObject();
 
         var yaml = YamlConverter.Serialize(input);
 
@@ -88,7 +89,7 @@ public class JsonNodeYamlConverterTests
     [InlineData("[]")]
     public void JsonArrayTests(string val)
     {
-        var input = JsonNode.Parse(val);
+        var input = JsonNode.Parse(val).AsArray();
 
         var yaml = YamlConverter.Serialize(input);
 
