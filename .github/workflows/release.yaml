@@ -35,6 +35,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage.cobertura.xml
+        fail_ci_if_error: true
 
     - name: Semantic Release
       uses: cycjimmy/semantic-release-action@v2
