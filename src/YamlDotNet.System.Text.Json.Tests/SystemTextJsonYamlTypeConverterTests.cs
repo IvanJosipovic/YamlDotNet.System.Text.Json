@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
-public class JsonNodeYamlConverterTests
+public class SystemTextJsonYamlTypeConverterTests
 {
     [Theory(Timeout = 100)]
     [InlineData("25")]

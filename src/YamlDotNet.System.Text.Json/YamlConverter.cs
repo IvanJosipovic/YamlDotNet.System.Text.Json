@@ -7,11 +7,11 @@ namespace YamlDotNet.System.Text.Json
         public static ISerializer DefaultSerializer = new SerializerBuilder()
                 .DisableAliases()
                 .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull | DefaultValuesHandling.OmitDefaults)
-                .WithTypeConverter(new JsonNodeYamlConverter())
+                .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
                 .Build();
 
         public static IDeserializer DefaultDeserializer = new DeserializerBuilder()
-                .WithTypeConverter(new JsonNodeYamlConverter())
+                .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
                 .Build();
 
         public static string Serialize(object obj, ISerializer? serializer = null)
