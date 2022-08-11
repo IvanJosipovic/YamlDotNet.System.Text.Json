@@ -172,7 +172,14 @@ namespace YamlDotNet.System.Text.Json
 
                 emitter.Emit(new Scalar(null, property.Key));
 
-                WriteYaml(emitter, propVal, propVal.GetType());
+                if (property.Value == null)
+                {
+                    WriteValue(emitter, null);
+                }
+                else
+                {
+                    WriteYaml(emitter, propVal, propVal.GetType());
+                }
             }
 
             emitter.Emit(new MappingEnd());
@@ -180,6 +187,12 @@ namespace YamlDotNet.System.Text.Json
 
         private void WriteValue(IEmitter emitter, object value)
         {
+            if (value == null)
+            {
+                emitter.Emit(new Scalar(null, "null"));
+                return;
+            }
+
             var obj = ((JsonValue)value).GetValue<JsonElement>();
 
             switch (obj.ValueKind)
@@ -237,6 +250,12 @@ namespace YamlDotNet.System.Text.Json
 
             foreach (var item in ((JsonArray)value))
             {
+                if (item == null)
+                {
+                    emitter.Emit(new Scalar(null, "null"));
+                    continue;
+                }
+
                 WriteYaml(emitter, item, item.GetType());
             }
 
