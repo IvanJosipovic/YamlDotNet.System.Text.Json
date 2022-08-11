@@ -1,36 +1,84 @@
-using System.Xml;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace YamlDotNet.System.Text.Json.Tests
+namespace YamlDotNet.System.Text.Json.Tests;
+
+public class JsonNodeYamlConverterTests
 {
-    public class JsonNodeYamlConverterTests
+    [Theory]
+    [InlineData("25")]
+    [InlineData("\"25\"")]
+    [InlineData("1.55")]
+    [InlineData("\"1.55\"")]
+    [InlineData("\"my string\"")]
+    //[InlineData("\"test\ntest2\ntest3\"")]
+    [InlineData("true")]
+    [InlineData("false")]
+    public void JsonValueTests(string val)
     {
-        [Theory]
-        [InlineData("{\"Temperature\": \"25\"}")]
-        //[InlineData("{\"Temperature\": 25}")]
-        //[InlineData("{\"Temperatures\": [\"1\",\"2\",\"3\"]}")]
-        //[InlineData("{\"Temperatures\": [1,2,3]}")]
+        var input = JsonValue.Parse(val);
 
-        //[InlineData("25")]
-        //[InlineData("\"25\"")]
-        //[InlineData("test\ntest2\ntest3")]
-        //[InlineData("true")]
-        //[InlineData("false")]
-        //[InlineData("0")]
-        //[InlineData("100")]
-        //[InlineData("1.55")]
-        //[InlineData("\"1.55\"")]
+        var yaml = YamlConverter.Serialize(input);
 
-        public void Tests(string val)
-        {
-            JsonNode val2 = JsonNode.Parse(val);
+        var output = YamlConverter.Deserialize<JsonValue>(yaml);
 
-            string yaml = YamlConverter.Serialize(val2);
+        Assert.Equal(input.ToJsonString(), output.ToJsonString());
+    }
 
-            //JsonNode val3 = YamlConverter.Deserialize(yaml);
+    [Theory]
+    [InlineData("{\"Temperature\": \"25\"}")]
+    [InlineData("{\"Temperature\": 25}")]
+    [InlineData("{\"Temperatures\": [\"1\",\"2\",\"3\"]}")]
+    [InlineData("{\"Temperatures\": [1,2,3]}")]
+    [InlineData("{\"Temperature\": {\"City\": \"Vancouver\",\"Temp\": 25}}")]
+    [InlineData("25")]
+    [InlineData("\"25\"")]
+    [InlineData("1.55")]
+    [InlineData("\"1.55\"")]
+    [InlineData("\"my string\"")]
+    //[InlineData("\"test\ntest2\ntest3\"")]
+    [InlineData("true")]
+    [InlineData("false")]
 
-            //Assert.Equal(val2.ToJsonString(), val3.ToJsonString());
-        }
+    public void JsonNodeTests(string val)
+    {
+        var input = JsonNode.Parse(val);
+
+        var yaml = YamlConverter.Serialize(input);
+
+        var output = YamlConverter.Deserialize<JsonNode>(yaml);
+
+        Assert.Equal(input.ToJsonString(), output.ToJsonString());
+    }
+
+    [Theory]
+    [InlineData("{\"Temperature\": \"25\"}")]
+    [InlineData("{\"Temperature\": 25}")]
+    [InlineData("{\"Temperatures\": [\"1\",\"2\",\"3\"]}")]
+    [InlineData("{\"Temperatures\": [1,2,3]}")]
+    [InlineData("{\"Temperature\": {\"City\": \"Vancouver\",\"Temp\": 25}}")]
+    public void JsonObjectTests(string val)
+    {
+        var input = JsonNode.Parse(val);
+
+        var yaml = YamlConverter.Serialize(input);
+
+        var output = YamlConverter.Deserialize<JsonObject>(yaml);
+
+        Assert.Equal(input.ToJsonString(), output.ToJsonString());
+    }
+
+    [Theory]
+    [InlineData("[\"1\",\"2\",\"3\"]")]
+    [InlineData("[1,2,3]")]
+    [InlineData("[{\"Temperature\": \"11\"},{\"Temperature\": \"22\"}]")]
+    public void JsonArrayTests(string val)
+    {
+        var input = JsonNode.Parse(val);
+
+        var yaml = YamlConverter.Serialize(input);
+
+        var output = YamlConverter.Deserialize<JsonArray>(yaml);
+
+        Assert.Equal(input.ToJsonString(), output.ToJsonString());
     }
 }
