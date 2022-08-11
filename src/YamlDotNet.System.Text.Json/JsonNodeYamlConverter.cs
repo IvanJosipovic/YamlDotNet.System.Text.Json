@@ -387,7 +387,7 @@ namespace YamlDotNet.System.Text.Json
                     emitter.Emit(new Scalar(null, "null"));
                     break;
                 default:
-                    emitter.Emit(new Scalar(obj.ToString()));
+                    throw new NotImplementedException();
                     break;
             }
         }
