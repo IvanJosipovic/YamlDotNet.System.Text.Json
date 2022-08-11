@@ -14,6 +14,7 @@ public class JsonNodeYamlConverterTests
     [InlineData("true")]
     [InlineData("false")]
     //[InlineData("null")]
+    //[InlineData("{}")]
     public void JsonValueTests(string val)
     {
         var input = JsonValue.Parse(val);
@@ -28,6 +29,7 @@ public class JsonNodeYamlConverterTests
     [Theory]
     [InlineData("{\"Temperature\": \"25\"}")]
     [InlineData("{\"Temperature\": 25}")]
+    //[InlineData("{\"Temperature\": \"test\ntest2\ntest3\"}")]
     [InlineData("{\"Temperatures\": [\"1\",\"2\",\"3\"]}")]
     [InlineData("{\"Temperatures\": [1,2,3]}")]
     [InlineData("{\"Temperature\": {\"City\": \"Vancouver\",\"Temp\": 25}}")]
@@ -81,7 +83,7 @@ public class JsonNodeYamlConverterTests
     [InlineData("[1,2,null]")]
     [InlineData("[{\"Prop\": {\"Prop\": 1}},{\"Prop\": {\"Prop\": 2}},{\"Prop\": {\"Prop\": 3}}]")]
     [InlineData("[[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]")]
-
+    [InlineData("[]")]
     public void JsonArrayTests(string val)
     {
         var input = JsonNode.Parse(val);
