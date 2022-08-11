@@ -118,67 +118,6 @@ namespace YamlDotNet.System.Text.Json
             return null;
         }
 
-        private object ReadJsonElement(IParser parser)
-        {
-            if (parser.TryConsume<Scalar>(out var scalar))
-            {
-                if (scalar.Style == ScalarStyle.Plain)
-                {
-                    if (long.TryParse(scalar.Value, out var i))
-                    {
-                        return JsonSerializer.SerializeToDocument(i).RootElement;
-                    }
-                    else if (float.TryParse(scalar.Value, out var f))
-                    {
-                        return JsonSerializer.SerializeToDocument(f).RootElement;
-                    }
-                    else if (bool.TryParse(scalar.Value, out var b))
-                    {
-                        return JsonSerializer.SerializeToDocument(b).RootElement;
-                    }
-                    else if (scalar.Value == "null")
-                    {
-                        return JsonSerializer.SerializeToDocument((object)null).RootElement;
-                    }
-                    else if (scalar.Value.GetType() == typeof(string))
-                    {
-                        return JsonSerializer.SerializeToDocument(scalar.Value).RootElement;
-                    }
-                }
-                else
-                {
-                    return JsonSerializer.SerializeToDocument(scalar.Value).RootElement;
-                }
-            }
-
-            if (parser.TryConsume<SequenceStart>(out var start))
-            {
-                var array = new JsonArray();
-
-                while (!parser.Accept<SequenceEnd>(out var end))
-                {
-                    if (parser.Accept<Scalar>(out var scalar2))
-                    {
-                        array.Add((JsonValue)ReadYaml(parser, typeof(JsonValue)));
-                    }
-                    else if (parser.Accept<MappingStart>(out var mapStart))
-                    {
-                        array.Add((JsonObject)ReadYaml(parser, typeof(JsonObject)));
-                    }
-                    else if (parser.Accept<SequenceStart>(out var seqStart))
-                    {
-                        array.Add((JsonArray)ReadYaml(parser, typeof(JsonArray)));
-                    }
-                }
-
-                parser.Consume<SequenceEnd>();
-
-                return JsonSerializer.SerializeToDocument(array).RootElement;
-            }
-
-            return null;
-        }
-
         private object ReadJsonObject(IParser parser)
         {
             var value = ReadJsonValue(parser);
