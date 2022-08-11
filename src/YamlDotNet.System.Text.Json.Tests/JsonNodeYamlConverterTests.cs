@@ -10,11 +10,12 @@ public class JsonNodeYamlConverterTests
     [InlineData("1.55")]
     [InlineData("\"1.55\"")]
     [InlineData("\"my string\"")]
-    //[InlineData("\"test\ntest2\ntest3\"")]
+    [InlineData("\"test\\ntest2\\ntest3\"")]
     [InlineData("true")]
     [InlineData("false")]
     //[InlineData("null")]
     //[InlineData("{}")]
+    [InlineData("\"\"")]
     public void JsonValueTests(string val)
     {
         var input = JsonValue.Parse(val);
@@ -29,11 +30,12 @@ public class JsonNodeYamlConverterTests
     [Theory]
     [InlineData("{\"Temperature\": \"25\"}")]
     [InlineData("{\"Temperature\": 25}")]
-    //[InlineData("{\"Temperature\": \"test\ntest2\ntest3\"}")]
+    [InlineData("{\"Temperature\": \"test\\ntest2\\ntest3\"}")]
     [InlineData("{\"Temperatures\": [\"1\",\"2\",\"3\"]}")]
     [InlineData("{\"Temperatures\": [1,2,3]}")]
     [InlineData("{\"Temperature\": {\"City\": \"Vancouver\",\"Temp\": 25}}")]
     [InlineData("{\"Temperature\": null}")]
+    [InlineData("{\"Temperature\": \"\"}")]
     [InlineData("{\"Temperatures\": [{\"Prop\": 1},{\"Prop\": 2},{\"Prop\": 3}]}")]
     [InlineData("{\"Temperatures\": [[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]}")]
     [InlineData("25")]
@@ -41,10 +43,9 @@ public class JsonNodeYamlConverterTests
     [InlineData("1.55")]
     [InlineData("\"1.55\"")]
     [InlineData("\"my string\"")]
-    //[InlineData("\"test\ntest2\ntest3\"")]
+    [InlineData("\"test\\ntest2\\ntest3\"")]
     [InlineData("true")]
     [InlineData("false")]
-
     public void JsonNodeTests(string val)
     {
         var input = JsonNode.Parse(val);
@@ -63,6 +64,7 @@ public class JsonNodeYamlConverterTests
     [InlineData("{\"Temperatures\": [1,2,3]}")]
     [InlineData("{\"Temperature\": {\"City\": \"Vancouver\",\"Temp\": 25}}")]
     [InlineData("{\"Temperature\": null}")]
+    [InlineData("{\"Temperature\": \"\"}")]
     [InlineData("{\"Temperatures\": [{\"Prop\": 1},{\"Prop\": 2},{\"Prop\": 3}]}")]
     [InlineData("{\"Temperatures\": [[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]}")]
     public void JsonObjectTests(string val)
