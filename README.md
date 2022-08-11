@@ -2,7 +2,7 @@
 
 [![Nuget](https://img.shields.io/nuget/vpre/YamlDotNet.System.Text.Json.svg?style=flat-square)](https://www.nuget.org/packages/YamlDotNet.System.Text.Json)
 [![Nuget)](https://img.shields.io/nuget/dt/YamlDotNet.System.Text.Json.svg?style=flat-square)](https://www.nuget.org/packages/YamlDotNet.System.Text.Json)
-
+[![codecov](https://codecov.io/gh/IvanJosipovic/YamlDotNet.System.Text.Json/branch/alpha/graph/badge.svg?token=h453kfi3zo)](https://codecov.io/gh/IvanJosipovic/YamlDotNet.System.Text.Json)
 ## What is this?
 
 This project contains a [IYamlTypeConverter](https://github.com/aaubry/YamlDotNet/wiki/Serialization.Serializer#withtypeconverteriyamltypeconverter) which can convert System.Text.Json objects to YAML and back.
