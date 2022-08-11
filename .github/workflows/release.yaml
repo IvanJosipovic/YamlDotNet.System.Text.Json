@@ -3,8 +3,12 @@ on:
   push:
     branches:
       - '*'
+    paths-ignore:
+    - CHANGELOG.md
   pull_request:
     types: [opened, reopened, synchronize]
+    paths-ignore:
+    - CHANGELOG.md
 
 env:
   semantic_version: 19
