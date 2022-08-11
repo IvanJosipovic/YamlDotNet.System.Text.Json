@@ -32,18 +32,18 @@ var yaml = YamlConverter.Serialize(someObject);
 var obj2 = YamlConverter.Deserialize<MyTypedObject>(yaml);
 ```
 
-## JsonNodeYamlConverter
-This is a type converter for reading and writing JsonNode objects. It's automatically used by YamlConverter, but you can add it to your own serializer definition by using
-``` .WithTypeConverter(new JsonNodeYamlConverter())```
+## SystemTextJsonYamlTypeConverter
+This is a type converter for reading and writing System.Text.Json objects. It's automatically used by YamlConverter, but you can add it to your own serializer definition by using
+``` .WithTypeConverter(new SystemTextJsonYamlTypeConverter())```
 
 Example:
 
 ```csharp
 var serializer = new SerializerBuilder()
-            .WithTypeConverter(new JsonNodeYamlConverter())
+            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
             .Build();
 var deserializer = new DeserializerBuilder()
-            .WithTypeConverter(new JsonNodeYamlConverter())
+            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
             .Build();
 ```
 
