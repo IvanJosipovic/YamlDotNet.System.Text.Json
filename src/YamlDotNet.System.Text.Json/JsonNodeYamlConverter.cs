@@ -37,7 +37,7 @@ namespace YamlDotNet.System.Text.Json
             }
             else if (typeof(JsonElement).IsAssignableFrom(type))
             {
-                return ReadJsonElement(parser);
+                return ReadJsonDocument(parser).RootElement;
             }
             else if (typeof(JsonDocument).IsAssignableFrom(type))
             {
@@ -244,7 +244,7 @@ namespace YamlDotNet.System.Text.Json
             return array;
         }
 
-        private object ReadJsonDocument(IParser parser)
+        private JsonDocument ReadJsonDocument(IParser parser)
         {
             if (parser.TryConsume<MappingStart>(out var start))
             {
@@ -271,6 +271,31 @@ namespace YamlDotNet.System.Text.Json
                 parser.Consume<MappingEnd>();
 
                 return JsonSerializer.Deserialize<JsonDocument>(node);
+            }
+
+            if (parser.TryConsume<SequenceStart>(out var start2))
+            {
+                var array = new JsonArray();
+
+                while (!parser.Accept<SequenceEnd>(out var end))
+                {
+                    if (parser.Accept<Scalar>(out var scalar2))
+                    {
+                        array.Add((JsonValue)ReadYaml(parser, typeof(JsonValue)));
+                    }
+                    else if (parser.Accept<MappingStart>(out var mapStart))
+                    {
+                        array.Add((JsonObject)ReadYaml(parser, typeof(JsonObject)));
+                    }
+                    else if (parser.Accept<SequenceStart>(out var seqStart))
+                    {
+                        array.Add((JsonArray)ReadYaml(parser, typeof(JsonArray)));
+                    }
+                }
+
+                parser.Consume<SequenceEnd>();
+
+                return JsonSerializer.SerializeToDocument(array);
             }
 
             if (parser.TryConsume<Scalar>(out var scalar))
