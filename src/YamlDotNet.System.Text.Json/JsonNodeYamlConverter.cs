@@ -67,7 +67,7 @@ namespace YamlDotNet.System.Text.Json
                         return JsonValue.Create(scalar.Value);
                     }
                 }
-                else if (scalar.Style == ScalarStyle.SingleQuoted)
+                else
                 {
                     return JsonValue.Create(scalar.Value);
                 }
