@@ -6,6 +6,9 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
+env:
+  semantic_version: 19
+
 name: Create Release
 jobs:
   build:
@@ -36,7 +39,8 @@ jobs:
       uses: cycjimmy/semantic-release-action@v2
       id: semantic
       with:
-        semantic_version: 19
+        semantic_version: ${{ env.semantic_version }}
+        dry_run: true
         extra_plugins: |
           @semantic-release/changelog
       env:
@@ -51,3 +55,11 @@ jobs:
       if: steps.semantic.outputs.new_release_published == 'true'
       working-directory: src/YamlDotNet.System.Text.Json/bin/Release
       run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
+
+    - name: Semantic Release
+      if: steps.semantic.outputs.new_release_published == 'true'
+      uses: cycjimmy/semantic-release-action@v2
+      with:
+        semantic_version: ${{ env.semantic_version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
