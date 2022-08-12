@@ -53,7 +53,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: .NET Pack
-      if: steps.semantic.outputs.new_release_published == 'true'
       working-directory: src/YamlDotNet.System.Text.Json
       run: dotnet pack -c Release -p:Version=${{ (steps.semantic.outputs.new_release_published && steps.semantic.outputs.new_release_version) || '0.0.1' }}
 
