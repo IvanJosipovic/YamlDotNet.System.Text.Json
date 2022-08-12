@@ -71,7 +71,6 @@ public class SystemTextJsonYamlTypeConverterTests
     [InlineData("{\"Temperatures\": [{\"Prop\": 1},{\"Prop\": 2},{\"Prop\": 3}]}")]
     [InlineData("{\"Temperatures\": [[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]}")]
     [InlineData("{\"KEY1\":{\"NAME\":\"XXXXXX\",\"VALUE\":100},\"KEY2\":{\"NAME\":\"YYYYYYY\",\"VALUE\":200},\"KEY3\":{\"NAME\":\"ZZZZZZZ\",\"VALUE\":500}}")]
-
     public void JsonObjectTests(string val)
     {
         var input = JsonNode.Parse(val).AsObject();
@@ -103,7 +102,16 @@ public class SystemTextJsonYamlTypeConverterTests
         Assert.Equal(input.ToJsonString(), output.ToJsonString());
     }
 
-    [Theory (Timeout = 100)]
+    [InlineData("{\"Temperature\": \"25\"}")]
+    [InlineData("{\"Temperature\": 25}")]
+    [InlineData("{\"Temperature\": \"test\\ntest2\\ntest3\"}")]
+    [InlineData("{\"Temperatures\": [\"1\",\"2\",\"3\"]}")]
+    [InlineData("{\"Temperatures\": [1,2,3]}")]
+    [InlineData("{\"Temperature\": {\"City\": \"Vancouver\",\"Temp\": 25}}")]
+    [InlineData("{\"Temperature\": null}")]
+    [InlineData("{\"Temperature\": \"\"}")]
+    [InlineData("{\"Temperatures\": [{\"Prop\": 1},{\"Prop\": 2},{\"Prop\": 3}]}")]
+    [InlineData("{\"Temperatures\": [[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]}")]
     [InlineData("25")]
     [InlineData("\"25\"")]
     [InlineData("1.55")]
@@ -112,10 +120,8 @@ public class SystemTextJsonYamlTypeConverterTests
     [InlineData("\"test\\ntest2\\ntest3\"")]
     [InlineData("true")]
     [InlineData("false")]
-    //[InlineData("null")]
-    //[InlineData("{}")]
-    [InlineData("\"\"")]
-    [InlineData("[\"1\",\"2\",\"3\"]")]
+    [InlineData("{ \"url\": \"{\\\"config\\\":{\\\"entries\\\":[{\\\"url\\\":\\\"http://service.svc.cluster.local:7002/policy-data\\\",\\\"topics\\\":[\\\"policy_data\\\"]}]}}\"}")]
+    [InlineData("[[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]")]
     [InlineData("[{\"KEY1\":{\"NAME\":\"XXXXXX\",\"VALUE\":100},\"KEY2\":{\"NAME\":\"YYYYYYY\",\"VALUE\":200},\"KEY3\":{\"NAME\":\"ZZZZZZZ\",\"VALUE\":500}}]")]
     public void JsonElementTests(string val)
     {
@@ -150,7 +156,7 @@ public class SystemTextJsonYamlTypeConverterTests
     [InlineData("{ \"url\": \"{\\\"config\\\":{\\\"entries\\\":[{\\\"url\\\":\\\"http://service.svc.cluster.local:7002/policy-data\\\",\\\"topics\\\":[\\\"policy_data\\\"]}]}}\"}")]
     [InlineData("[[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]")]
     [InlineData("[{\"KEY1\":{\"NAME\":\"XXXXXX\",\"VALUE\":100},\"KEY2\":{\"NAME\":\"YYYYYYY\",\"VALUE\":200},\"KEY3\":{\"NAME\":\"ZZZZZZZ\",\"VALUE\":500}}]")]
-        public void JsonDocumentTests(string val)
+    public void JsonDocumentTests(string val)
     {
         var input = JsonSerializer.Deserialize<JsonDocument>(val);
 
