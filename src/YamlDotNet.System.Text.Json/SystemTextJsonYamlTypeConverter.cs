@@ -315,13 +315,17 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 
         JsonElement obj;
 
-        if (typeof(JsonValue).IsAssignableFrom(value.GetType()))
+        if (typeof(JsonValue).IsAssignableFrom(value.GetType()) && typeof(JsonElement).IsAssignableFrom(value.GetType()))
         {
             obj = ((JsonValue)value).GetValue<JsonElement>();
         }
-        else
+        else if (typeof(JsonElement).IsAssignableFrom(value.GetType()))
         {
             obj = (JsonElement)value;
+        }
+        else
+        {
+            obj = ((JsonValue)value).Deserialize<JsonElement>();
         }
 
         switch (obj.ValueKind)
