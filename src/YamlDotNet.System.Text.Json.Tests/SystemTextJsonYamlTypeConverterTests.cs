@@ -102,6 +102,7 @@ public class SystemTextJsonYamlTypeConverterTests
         Assert.Equal(input.ToJsonString(), output.ToJsonString());
     }
 
+    [Theory(Timeout = 100)]
     [InlineData("{\"Temperature\": \"25\"}")]
     [InlineData("{\"Temperature\": 25}")]
     [InlineData("{\"Temperature\": \"test\\ntest2\\ntest3\"}")]
