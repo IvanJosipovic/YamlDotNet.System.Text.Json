@@ -91,6 +91,8 @@ public class SystemTextJsonYamlTypeConverterTests
     [InlineData("[[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]")]
     [InlineData("[]")]
     [InlineData("[{\"KEY1\":{\"NAME\":\"XXXXXX\",\"VALUE\":100},\"KEY2\":{\"NAME\":\"YYYYYYY\",\"VALUE\":200},\"KEY3\":{\"NAME\":\"ZZZZZZZ\",\"VALUE\":500}}]")]
+    [InlineData("[true,false]")]
+    [InlineData("[\"true\",\"false\"]")]
     public void JsonArrayTests(string val)
     {
         var input = JsonNode.Parse(val).AsArray();
@@ -124,6 +126,8 @@ public class SystemTextJsonYamlTypeConverterTests
     [InlineData("{ \"url\": \"{\\\"config\\\":{\\\"entries\\\":[{\\\"url\\\":\\\"http://service.svc.cluster.local:7002/policy-data\\\",\\\"topics\\\":[\\\"policy_data\\\"]}]}}\"}")]
     [InlineData("[[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]")]
     [InlineData("[{\"KEY1\":{\"NAME\":\"XXXXXX\",\"VALUE\":100},\"KEY2\":{\"NAME\":\"YYYYYYY\",\"VALUE\":200},\"KEY3\":{\"NAME\":\"ZZZZZZZ\",\"VALUE\":500}}]")]
+    [InlineData("[true,false]")]
+    [InlineData("[\"true\",\"false\"]")]
     public void JsonElementTests(string val)
     {
         var input = JsonSerializer.Deserialize<JsonElement>(val);
@@ -157,6 +161,9 @@ public class SystemTextJsonYamlTypeConverterTests
     [InlineData("{ \"url\": \"{\\\"config\\\":{\\\"entries\\\":[{\\\"url\\\":\\\"http://service.svc.cluster.local:7002/policy-data\\\",\\\"topics\\\":[\\\"policy_data\\\"]}]}}\"}")]
     [InlineData("[[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]")]
     [InlineData("[{\"KEY1\":{\"NAME\":\"XXXXXX\",\"VALUE\":100},\"KEY2\":{\"NAME\":\"YYYYYYY\",\"VALUE\":200},\"KEY3\":{\"NAME\":\"ZZZZZZZ\",\"VALUE\":500}}]")]
+    [InlineData("[true,false]")]
+    [InlineData("[\"true\",\"false\"]")]
+
     public void JsonDocumentTests(string val)
     {
         var input = JsonSerializer.Deserialize<JsonDocument>(val);
