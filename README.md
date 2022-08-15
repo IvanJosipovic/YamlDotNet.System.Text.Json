@@ -18,7 +18,7 @@ Supported Objects:
 
 ## Installation
 
-```dotnet add package YamlDotNet.System.Text.Json --prerelease```
+```dotnet add package YamlDotNet.System.Text.Json```
 
 ## YamlConverter
 
