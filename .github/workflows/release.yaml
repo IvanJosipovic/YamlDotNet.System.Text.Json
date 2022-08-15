@@ -1,0 +1,75 @@
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '*'
+    paths-ignore:
+    - CHANGELOG.md
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths-ignore:
+    - CHANGELOG.md
+
+env:
+  semantic_version: 19
+
+name: Create Release
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v2
+      with:
+        global-json-file: global.json
+
+    - name: .NET Build
+      run: dotnet build -c Release
+
+    - name: .NET Test
+      run: dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+
+    - name: Coverage
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage.cobertura.xml
+        fail_ci_if_error: true
+
+    - name: Semantic Release
+      uses: cycjimmy/semantic-release-action@v2
+      id: semantic
+      with:
+        semantic_version: ${{ env.semantic_version }}
+        dry_run: true
+        extra_plugins: |
+          @semantic-release/changelog
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: .NET Pack
+      working-directory: src/YamlDotNet.System.Text.Json
+      run: dotnet pack -c Release -p:Version=${{ (steps.semantic.outputs.new_release_published && steps.semantic.outputs.new_release_version) || '0.0.1' }}
+
+    - name: .NET NuGet Push
+      if: steps.semantic.outputs.new_release_published == 'true'
+      working-directory: src/YamlDotNet.System.Text.Json/bin/Release
+      run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
+
+    - name: Semantic Release
+      if: steps.semantic.outputs.new_release_published == 'true'
+      uses: cycjimmy/semantic-release-action@v2
+      with:
+        semantic_version: ${{ env.semantic_version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: NuGet Package
+        path: src/**/*.nupkg

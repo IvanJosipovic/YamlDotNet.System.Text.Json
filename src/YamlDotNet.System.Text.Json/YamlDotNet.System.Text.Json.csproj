@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <PackageId>YamlDotNet.System.Text.Json</PackageId>
+    <Authors>Ivan Josipovic</Authors>
+    <Description>Allows YamlDotNet to de/serialize System.Text.Json objects</Description>
+    <PackageTags>YamlDotNet System.Text.Json JsonNode JsonArray JsonObject JsonValue JsonElement JsonDocument Yaml Json IYamlTypeConverter</PackageTags>
+    <RepositoryUrl>https://github.com/IvanJosipovic/YamlDotNet.System.Text.Json</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="6.0.5" />
+    <PackageReference Include="YamlDotNet" Version="12.0.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
