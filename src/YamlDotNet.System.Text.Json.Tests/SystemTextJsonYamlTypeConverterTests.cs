@@ -62,7 +62,7 @@ public class SystemTextJsonYamlTypeConverterTests
         };
     }
 
-    [Theory(Timeout = 100)]
+    [Theory]
     [MemberData(nameof(GetValueTests))]
     public void JsonValueTests(string val)
     {
@@ -75,7 +75,7 @@ public class SystemTextJsonYamlTypeConverterTests
         Assert.Equal(input.ToJsonString(), output.ToJsonString());
     }
 
-    [Theory(Timeout = 100)]
+    [Theory]
     [MemberData(nameof(GetValueTests))]
     [MemberData(nameof(GetObjectTests))]
     public void JsonNodeTests(string val)
@@ -89,7 +89,7 @@ public class SystemTextJsonYamlTypeConverterTests
         Assert.Equal(input.ToJsonString(), output.ToJsonString());
     }
 
-    [Theory(Timeout = 100)]
+    [Theory]
     [MemberData(nameof(GetObjectTests))]
     public void JsonObjectTests(string val)
     {
@@ -102,7 +102,7 @@ public class SystemTextJsonYamlTypeConverterTests
         Assert.Equal(input.ToJsonString(), output.ToJsonString());
     }
 
-    [Theory(Timeout = 100)]
+    [Theory]
     [MemberData(nameof(GetArrayTests))]
     public void JsonArrayTests(string val)
     {
@@ -115,7 +115,7 @@ public class SystemTextJsonYamlTypeConverterTests
         Assert.Equal(input.ToJsonString(), output.ToJsonString());
     }
 
-    [Theory(Timeout = 100)]
+    [Theory]
     [MemberData(nameof(GetValueTests))]
     [MemberData(nameof(GetObjectTests))]
     [MemberData(nameof(GetArrayTests))]
@@ -130,7 +130,7 @@ public class SystemTextJsonYamlTypeConverterTests
         Assert.Equal(JsonSerializer.Serialize(input), JsonSerializer.Serialize(output));
     }
 
-    [Theory(Timeout = 100)]
+    [Theory]
     [MemberData(nameof(GetValueTests))]
     [MemberData(nameof(GetObjectTests))]
     [MemberData(nameof(GetArrayTests))]
