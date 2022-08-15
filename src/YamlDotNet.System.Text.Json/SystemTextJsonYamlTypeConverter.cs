@@ -43,11 +43,8 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         {
             return ReadJsonDocument(parser);
         }
-        else
-        {
-            //Shouldn't be here!
-            throw new Exception("Unknown Type :" + type.FullName);
-        }
+
+        return null;
     }
 
     public void WriteYaml(IEmitter emitter, object? value, Type type)
@@ -71,11 +68,6 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         else if (typeof(JsonDocument).IsAssignableFrom(type))
         {
             WriteJsonDocument(emitter, value);
-        }
-        else
-        {
-            //Shouldn't be here!
-            throw new Exception("Unknown Type :" + type.FullName);
         }
     }
 
@@ -326,8 +318,6 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 
         switch (obj.ValueKind)
         {
-            case JsonValueKind.Undefined:
-                throw new NotImplementedException();
             case JsonValueKind.Object:
                 emitter.Emit(new MappingStart(null, null, false, MappingStyle.Any));
 
@@ -385,9 +375,6 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                 break;
             case JsonValueKind.Null:
                 emitter.Emit(new Scalar(null, "null"));
-                break;
-            default:
-                throw new NotImplementedException();
                 break;
         }
     }
