@@ -19,9 +19,14 @@ public sealed class SystemTextJsonTypeInspector : TypeInspectorSkeleton
     public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container)
     {
         return innerTypeDescriptor.GetProperties(type, container)
-            .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null ||
-                        p.GetCustomAttribute<JsonIgnoreAttribute>().Condition == JsonIgnoreCondition.Never ||
-                        p.GetCustomAttribute<JsonIgnoreAttribute>().Condition != JsonIgnoreCondition.Always
+            .Where(p =>
+            {
+                var attr = p.GetCustomAttribute<JsonIgnoreAttribute>();
+
+                return attr == null ||
+                       attr.Condition == JsonIgnoreCondition.Never ||
+                       attr.Condition != JsonIgnoreCondition.Always;
+            }
             )
             .Select(p =>
             {
