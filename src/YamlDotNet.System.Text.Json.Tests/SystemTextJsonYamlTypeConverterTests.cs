@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -5,6 +6,11 @@ namespace YamlDotNet.System.Text.Json.Tests;
 
 public class SystemTextJsonYamlTypeConverterTests
 {
+    private static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
     public static IEnumerable<object[]> GetValueTests()
     {
         return new List<object[]>
@@ -26,19 +32,19 @@ public class SystemTextJsonYamlTypeConverterTests
     {
         return new List<object[]>
         {
-            new object[] { "{\"Temperature\": \"25\"}" },
-            new object[] { "{\"Temperature\": 25}" },
-            new object[] { "{\"Temperature\": \"test\\ntest2\\ntest3\"}" },
-            new object[] { "{\"Temperatures\": [\"1\",\"2\",\"3\"]}" },
-            new object[] { "{\"Temperatures\": [1,2,3]}" },
-            new object[] { "{\"Temperature\": {\"City\": \"Vancouver\",\"Temp\": 25}}" },
-            new object[] { "{\"Temperature\": null}" },
-            new object[] { "{\"Temperature\": \"\"}" },
-            new object[] { "{\"Temperature\": []}" },
-            new object[] { "{\"Temperature\": {}}" },
-            new object[] { "{\"Temperatures\": [{\"Prop\": 1},{\"Prop\": 2},{\"Prop\": 3}]}" },
-            new object[] { "{\"Temperatures\": [[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]}" },
-            new object[] { "{ \"url\": \"{\\\"config\\\":{\\\"entries\\\":[{\\\"url\\\":\\\"http://service.svc.cluster.local:7002/policy-data\\\",\\\"topics\\\":[\\\"policy_data\\\"]}]}}\"}" },
+            new object[] { "{\"Temperature\":\"25\"}" },
+            new object[] { "{\"Temperature\":25}" },
+            new object[] { "{\"Temperature\":\"test\\ntest2\\ntest3\"}" },
+            new object[] { "{\"Temperatures\":[\"1\",\"2\",\"3\"]}" },
+            new object[] { "{\"Temperatures\":[1,2,3]}" },
+            new object[] { "{\"Temperature\":{\"City\":\"Vancouver\",\"Temp\":25}}" },
+            new object[] { "{\"Temperature\":null}" },
+            new object[] { "{\"Temperature\":\"\"}" },
+            new object[] { "{\"Temperature\":[]}" },
+            new object[] { "{\"Temperature\":{}}" },
+            new object[] { "{\"Temperatures\":[{\"Prop\":1},{\"Prop\":2},{\"Prop\":3}]}" },
+            new object[] { "{\"Temperatures\":[[{\"Prop\":1},{\"Prop\":11},{\"Prop\":111}],[{\"Prop\":2},{\"Prop\":22},{\"Prop\":222}],[{\"Prop\":3},{\"Prop\":33},{\"Prop\":333}]]}" },
+            new object[] { "{\"url\":\"{\\\"config\\\":{\\\"entries\\\":[{\\\"url\\\":\\\"http://service.svc.cluster.local:7002/policy-data\\\",\\\"topics\\\":[\\\"policy_data\\\"]}]}}\"}" },
             new object[] { "{\"KEY1\":{\"NAME\":\"XXXXXX\",\"VALUE\":100},\"KEY2\":{\"NAME\":\"YYYYYYY\",\"VALUE\":200},\"KEY3\":{\"NAME\":\"ZZZZZZZ\",\"VALUE\":500}}" },
         };
     }
@@ -49,10 +55,10 @@ public class SystemTextJsonYamlTypeConverterTests
         {
             new object[] { "[\"1\",\"2\",\"3\"]" },
             new object[] { "[1,2,3]" },
-            new object[] { "[{\"Temperature\": \"11\"},{\"Temperature\": \"22\"}]" },
+            new object[] { "[{\"Temperature\":\"11\"},{\"Temperature\":\"22\"}]" },
             new object[] { "[1,2,null]" },
-            new object[] { "[{\"Prop\": {\"Prop\": 1}},{\"Prop\": {\"Prop\": 2}},{\"Prop\": {\"Prop\": 3}}]" },
-            new object[] { "[[{\"Prop\": 1},{\"Prop\": 11},{\"Prop\": 111}],[{\"Prop\": 2},{\"Prop\": 22},{\"Prop\": 222}],[{\"Prop\": 3},{\"Prop\": 33},{\"Prop\": 333}]]" },
+            new object[] { "[{\"Prop\":{\"Prop\":1}},{\"Prop\":{\"Prop\":2}},{\"Prop\":{\"Prop\":3}}]" },
+            new object[] { "[[{\"Prop\":1},{\"Prop\":11},{\"Prop\":111}],[{\"Prop\":2},{\"Prop\":22},{\"Prop\":222}],[{\"Prop\":3},{\"Prop\":33},{\"Prop\":333}]]" },
             new object[] { "[]" },
             new object[] { "[{\"KEY1\":{\"NAME\":\"XXXXXX\",\"VALUE\":100},\"KEY2\":{\"NAME\":\"YYYYYYY\",\"VALUE\":200},\"KEY3\":{\"NAME\":\"ZZZZZZZ\",\"VALUE\":500}}]" },
             new object[] { "[true,false]" },
@@ -66,13 +72,13 @@ public class SystemTextJsonYamlTypeConverterTests
     [MemberData(nameof(GetValueTests))]
     public void JsonValueTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonValue>(val);
+        var input = JsonSerializer.Deserialize<JsonValue>(val, JsonSerializerOptions);
 
         var yaml = YamlConverter.Serialize(input);
 
         var output = YamlConverter.Deserialize<JsonValue>(yaml);
 
-        Assert.Equal(input.ToJsonString(), output.ToJsonString());
+        Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
 
     [Theory]
@@ -80,39 +86,39 @@ public class SystemTextJsonYamlTypeConverterTests
     [MemberData(nameof(GetObjectTests))]
     public void JsonNodeTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonNode>(val);
+        var input = JsonSerializer.Deserialize<JsonNode>(val, JsonSerializerOptions);
 
         var yaml = YamlConverter.Serialize(input);
 
         var output = YamlConverter.Deserialize<JsonNode>(yaml);
 
-        Assert.Equal(input.ToJsonString(), output.ToJsonString());
+        Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
 
     [Theory]
     [MemberData(nameof(GetObjectTests))]
     public void JsonObjectTests(string val)
     {
-        var input = JsonNode.Parse(val).AsObject();
+        var input = JsonSerializer.Deserialize<JsonObject>(val, JsonSerializerOptions);
 
         var yaml = YamlConverter.Serialize(input);
 
         var output = YamlConverter.Deserialize<JsonObject>(yaml);
 
-        Assert.Equal(input.ToJsonString(), output.ToJsonString());
+        Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
 
     [Theory]
     [MemberData(nameof(GetArrayTests))]
     public void JsonArrayTests(string val)
     {
-        var input = JsonNode.Parse(val).AsArray();
+        var input = JsonSerializer.Deserialize<JsonArray>(val, JsonSerializerOptions);
 
         var yaml = YamlConverter.Serialize(input);
 
         var output = YamlConverter.Deserialize<JsonArray>(yaml);
 
-        Assert.Equal(input.ToJsonString(), output.ToJsonString());
+        Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
 
     [Theory]
@@ -121,13 +127,13 @@ public class SystemTextJsonYamlTypeConverterTests
     [MemberData(nameof(GetArrayTests))]
     public void JsonElementTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonElement>(val);
+        var input = JsonSerializer.Deserialize<JsonElement>(val, JsonSerializerOptions);
 
         var yaml = YamlConverter.Serialize(input);
 
         var output = YamlConverter.Deserialize<JsonElement>(yaml);
 
-        Assert.Equal(JsonSerializer.Serialize(input), JsonSerializer.Serialize(output));
+        Assert.Equal(val, JsonSerializer.Serialize(output, JsonSerializerOptions));
     }
 
     [Theory]
@@ -136,12 +142,12 @@ public class SystemTextJsonYamlTypeConverterTests
     [MemberData(nameof(GetArrayTests))]
     public void JsonDocumentTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonDocument>(val);
+        var input = JsonSerializer.Deserialize<JsonDocument>(val, JsonSerializerOptions);
 
         var yaml = YamlConverter.Serialize(input);
 
         var output = YamlConverter.Deserialize<JsonDocument>(yaml);
 
-        Assert.Equal(JsonSerializer.Serialize(input), JsonSerializer.Serialize(output));
+        Assert.Equal(val, JsonSerializer.Serialize(output, JsonSerializerOptions));
     }
 }
