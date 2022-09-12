@@ -1,3 +1,4 @@
+﻿using System.Text.Json;
 ﻿using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json;
@@ -18,6 +19,12 @@ public static class YamlConverter
     {
         serializer ??= DefaultSerializer;
         return serializer.Serialize(obj);
+    }
+
+    public static string SerializeJson(string json, ISerializer? serializer = null, JsonSerializerOptions jsonSerializerOptions = null)
+    {
+        serializer ??= DefaultSerializer;
+        return serializer.Serialize(JsonSerializer.Deserialize<JsonDocument>(json, jsonSerializerOptions));
     }
 
     public static T Deserialize<T>(string yaml, IDeserializer? deserializer = null)

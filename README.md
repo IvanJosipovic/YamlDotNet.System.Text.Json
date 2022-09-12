@@ -28,6 +28,9 @@ Supported Objects:
 // to serialize to yaml
 var yaml = YamlConverter.Serialize(someObject);
 
+// to serialize json to yaml
+var yaml = YamlConverter.SerializeJson(someJson);
+
 // to load your object as a typed object
 var obj2 = YamlConverter.Deserialize<MyTypedObject>(yaml);
 ```
