@@ -6,7 +6,7 @@ public static class YamlConverter
 {
     public static ISerializer DefaultSerializer = new SerializerBuilder()
             .DisableAliases()
-            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull | DefaultValuesHandling.OmitDefaults)
+            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
             .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
             .Build();
 
