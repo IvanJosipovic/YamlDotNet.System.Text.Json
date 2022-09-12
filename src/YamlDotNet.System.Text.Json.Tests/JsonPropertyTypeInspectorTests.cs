@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests
 {
@@ -110,6 +111,34 @@ namespace YamlDotNet.System.Text.Json.Tests
                               MyProp3: MyProp3
                               MyProp2: MyProp2
                               MyProp: MyProp
+
+                              """;
+            yaml.Should().Be(expected);
+        }
+
+        [Fact]
+        public void DisableOrder()
+        {
+            ISerializer serializer = new SerializerBuilder()
+            .DisableAliases()
+            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
+            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
+            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x, true))
+            .Build();
+
+        var model = new TestModel2()
+            {
+                MyProp = nameof(TestModel2.MyProp),
+                MyProp2 = nameof(TestModel2.MyProp2),
+                MyProp3 = nameof(TestModel2.MyProp3),
+            };
+
+            var yaml = YamlConverter.Serialize(model, serializer);
+
+            string expected = """
+                              MyProp: MyProp
+                              MyProp2: MyProp2
+                              MyProp3: MyProp3
 
                               """;
             yaml.Should().Be(expected);

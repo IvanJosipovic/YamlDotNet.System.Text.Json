@@ -11,17 +11,30 @@ public sealed class SystemTextJsonTypeInspector : TypeInspectorSkeleton
 {
     private readonly ITypeInspector innerTypeDescriptor;
 
-    public SystemTextJsonTypeInspector(ITypeInspector innerTypeDescriptor)
+    private readonly bool ignoreOrder;
+
+    /// <summary>
+    /// Applies property settings from <see cref="JsonPropertyNameAttribute"/> and <see cref="JsonIgnoreAttribute"/> to YamlDotNet
+    /// </summary>
+    /// <param name="innerTypeDescriptor"></param>
+    /// <param name="ignoreOrder">ignores JsonPropertyOrder</param>
+    public SystemTextJsonTypeInspector(ITypeInspector innerTypeDescriptor, bool ignoreOrder = false)
     {
         this.innerTypeDescriptor = innerTypeDescriptor;
+        this.ignoreOrder = ignoreOrder;
     }
 
     public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container)
     {
         return innerTypeDescriptor.GetProperties(type, container)
-            .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null ||
-                        p.GetCustomAttribute<JsonIgnoreAttribute>().Condition == JsonIgnoreCondition.Never ||
-                        p.GetCustomAttribute<JsonIgnoreAttribute>().Condition != JsonIgnoreCondition.Always
+            .Where(p =>
+            {
+                var attr = p.GetCustomAttribute<JsonIgnoreAttribute>();
+
+                return attr == null ||
+                       attr.Condition == JsonIgnoreCondition.Never ||
+                       attr.Condition != JsonIgnoreCondition.Always;
+            }
             )
             .Select(p =>
             {
@@ -34,11 +47,14 @@ public sealed class SystemTextJsonTypeInspector : TypeInspectorSkeleton
                     descriptor.Name = nameAttribute.Name;
                 }
 
-                var orderAttribute = p.GetCustomAttribute<JsonPropertyOrderAttribute>();
-
-                if (orderAttribute != null)
+                if (!ignoreOrder)
                 {
-                    descriptor.Order = orderAttribute.Order;
+                    var orderAttribute = p.GetCustomAttribute<JsonPropertyOrderAttribute>();
+
+                    if (orderAttribute != null)
+                    {
+                        descriptor.Order = orderAttribute.Order;
+                    }
                 }
 
                 return (IPropertyDescriptor)descriptor;

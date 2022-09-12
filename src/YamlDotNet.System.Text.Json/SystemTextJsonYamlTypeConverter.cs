@@ -1,16 +1,24 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
-using YamlDotNet.Core.Tokens;
 using YamlDotNet.Serialization;
 using Scalar = YamlDotNet.Core.Events.Scalar;
 
 namespace YamlDotNet.System.Text.Json;
 
+/// <summary>
+/// Allows YamlDotNet to de/serialize System.Text.Json objects
+/// </summary>
 public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 {
+    /// <summary>
+    /// Allows YamlDotNet to de/serialize System.Text.Json objects
+    /// </summary>
+    public SystemTextJsonYamlTypeConverter()
+    {
+    }
+
     public bool Accepts(Type type)
     {
         return typeof(JsonNode).IsAssignableFrom(type)
@@ -73,7 +81,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 
 
     // Read Functions
-    
+
     private object ReadJsonValue(IParser parser)
     {
         if (parser.TryConsume<Scalar>(out var scalar))
