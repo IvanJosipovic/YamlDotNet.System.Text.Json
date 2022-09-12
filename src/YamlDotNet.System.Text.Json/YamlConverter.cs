@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-﻿using YamlDotNet.Serialization;
+using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json;
 
@@ -9,10 +9,12 @@ public static class YamlConverter
             .DisableAliases()
             .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
             .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
+            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
             .Build();
 
     public static IDeserializer DefaultDeserializer = new DeserializerBuilder()
             .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
+            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
             .Build();
 
     public static string Serialize(object obj, ISerializer? serializer = null)
