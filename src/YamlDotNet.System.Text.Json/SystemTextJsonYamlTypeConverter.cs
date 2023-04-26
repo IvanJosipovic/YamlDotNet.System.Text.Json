@@ -12,11 +12,15 @@ namespace YamlDotNet.System.Text.Json;
 /// </summary>
 public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 {
+    private bool SortKeysAlphabetically { get; }
+
     /// <summary>
     /// Allows YamlDotNet to de/serialize System.Text.Json objects
     /// </summary>
-    public SystemTextJsonYamlTypeConverter()
+    /// <param name="sortKeysAlphabetically">sorts keys alphabetically when Serializing</param>
+    public SystemTextJsonYamlTypeConverter(bool sortKeysAlphabetically = false)
     {
+        SortKeysAlphabetically = sortKeysAlphabetically;
     }
 
     public bool Accepts(Type type)
@@ -277,7 +281,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
     {
         emitter.Emit(new MappingStart(null, null, false, MappingStyle.Any));
 
-        foreach (var property in (JsonObject)value)
+        foreach (var property in SortKeysAlphabetically ? ((JsonObject)value).OrderBy(x => x.Key).ToArray() : ((JsonObject)value).ToArray())
         {
             JsonNode propVal = property.Value;
 
@@ -329,7 +333,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
             case JsonValueKind.Object:
                 emitter.Emit(new MappingStart(null, null, false, MappingStyle.Any));
 
-                foreach (var item in obj.EnumerateObject())
+                foreach (var item in SortKeysAlphabetically ? obj.EnumerateObject().OrderBy(x => x.Name).ToArray() : obj.EnumerateObject().ToArray())
                 {
                     emitter.Emit(new Scalar(null, item.Name));
 

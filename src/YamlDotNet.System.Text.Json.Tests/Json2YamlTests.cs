@@ -29,5 +29,25 @@ namespace YamlDotNet.System.Text.Json.Tests
             yaml.Should().Be(expected);
         }
 
+        [Fact]
+        public void Test2()
+        {
+            var json = """
+                       {
+                        "b": "2",
+                        "a": "1"
+                       }
+                       """;
+
+            var yaml = YamlConverter.SerializeJson(json, null, null, true);
+
+            string expected = """
+                              a: '1'
+                              b: '2'
+
+                              """;
+            yaml.Should().Be(expected);
+        }
+
     }
 }
