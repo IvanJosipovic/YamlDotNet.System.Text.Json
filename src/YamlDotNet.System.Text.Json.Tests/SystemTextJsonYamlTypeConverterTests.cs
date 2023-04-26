@@ -150,4 +150,27 @@ public class SystemTextJsonYamlTypeConverterTests
 
         Assert.Equal(val, JsonSerializer.Serialize(output, JsonSerializerOptions));
     }
+
+    public static IEnumerable<object[]> GetObjectSortTests()
+    {
+        return new List<object[]>
+        {
+            new object[] { "{\"b\":\"2\",\"a\":\"1\"}", "{\"a\":\"1\",\"b\":\"2\"}" },
+            new object[] { "{\"b\":\"2\",\"a\":\"1\",\"c\":\"3\"}", "{\"a\":\"1\",\"b\":\"2\",\"c\":\"3\"}" },
+            new object[] { "{\"nested\":{\"b\":2,\"c\":3,\"a\":1}}", "{\"nested\":{\"a\":1,\"b\":2,\"c\":3}}" }
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(GetObjectSortTests))]
+    public void JsonNodeSortTests(string inputVal, string outputVal)
+    {
+        var input = JsonSerializer.Deserialize<JsonNode>(inputVal, JsonSerializerOptions);
+
+        var yaml = YamlConverter.Serialize(input, null, true);
+
+        var output = YamlConverter.Deserialize<JsonNode>(yaml);
+
+        Assert.Equal(outputVal, output.ToJsonString(JsonSerializerOptions));
+    }
 }
