@@ -5,33 +5,39 @@ namespace YamlDotNet.System.Text.Json;
 
 public static class YamlConverter
 {
-    public static ISerializer DefaultSerializer = new SerializerBuilder()
+    private static ISerializer GetSerializer(bool sortAlphabetically = false)
+    {
+        return new SerializerBuilder()
             .DisableAliases()
             .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
-            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
+            .WithTypeConverter(new SystemTextJsonYamlTypeConverter(sortAlphabetically))
             .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
             .Build();
+    }
 
-    public static IDeserializer DefaultDeserializer = new DeserializerBuilder()
-            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
-            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
-            .Build();
-
-    public static string Serialize(object obj, ISerializer? serializer = null)
+    private static IDeserializer GetDeserializer()
     {
-        serializer ??= DefaultSerializer;
+        return new DeserializerBuilder()
+            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
+            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
+            .Build();
+    }
+
+    public static string Serialize(object obj, ISerializer? serializer = null, bool sortAlphabetically = false)
+    {
+        serializer ??= GetSerializer(sortAlphabetically);
         return serializer.Serialize(obj);
     }
 
-    public static string SerializeJson(string json, ISerializer? serializer = null, JsonSerializerOptions jsonSerializerOptions = null)
+    public static string SerializeJson(string json, ISerializer? serializer = null, JsonSerializerOptions jsonSerializerOptions = null, bool sortAlphabetically = false)
     {
-        serializer ??= DefaultSerializer;
+        serializer ??= GetSerializer(sortAlphabetically);
         return serializer.Serialize(JsonSerializer.Deserialize<JsonDocument>(json, jsonSerializerOptions));
     }
 
     public static T Deserialize<T>(string yaml, IDeserializer? deserializer = null)
     {
-        deserializer ??= DefaultDeserializer;
+        deserializer ??= GetDeserializer();
         return deserializer.Deserialize<T>(yaml);
     }
 }
