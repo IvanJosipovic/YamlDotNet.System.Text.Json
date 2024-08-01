@@ -33,7 +33,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
             || typeof(JsonDocument).IsAssignableFrom(type);
     }
 
-    public object? ReadYaml(IParser parser, Type type)
+    public object? ReadYaml(IParser parser, Type type, ObjectDeserializer rootDeserializer)
     {
         if (typeof(JsonValue).IsAssignableFrom(type))
         {
@@ -41,25 +41,25 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         }
         else if (typeof(JsonArray).IsAssignableFrom(type))
         {
-            return ReadJsonArray(parser);
+            return ReadJsonArray(parser, rootDeserializer);
         }
         else if (typeof(JsonObject).IsAssignableFrom(type) || typeof(JsonNode).IsAssignableFrom(type))
         {
-            return ReadJsonObject(parser);
+            return ReadJsonObject(parser, rootDeserializer);
         }
         else if (typeof(JsonElement).IsAssignableFrom(type))
         {
-            return ReadJsonDocument(parser).RootElement;
+            return ReadJsonDocument(parser, rootDeserializer).RootElement;
         }
         else if (typeof(JsonDocument).IsAssignableFrom(type))
         {
-            return ReadJsonDocument(parser);
+            return ReadJsonDocument(parser, rootDeserializer);
         }
 
         return null;
     }
 
-    public void WriteYaml(IEmitter emitter, object? value, Type type)
+    public void WriteYaml(IEmitter emitter, object? value, Type type, ObjectSerializer serializer)
     {
         if (typeof(JsonValue).IsAssignableFrom(type))
         {
@@ -67,11 +67,11 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         }
         else if (typeof(JsonObject).IsAssignableFrom(type))
         {
-            WriteJsonObject(emitter, value);
+            WriteJsonObject(emitter, value, serializer);
         }
         else if (typeof(JsonArray).IsAssignableFrom(type))
         {
-            WriteJsonArray(emitter, value);
+            WriteJsonArray(emitter, value, serializer);
         }
         else if (typeof(JsonElement).IsAssignableFrom(type))
         {
@@ -82,7 +82,6 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
             WriteJsonDocument(emitter, value);
         }
     }
-
 
     // Read Functions
 
@@ -122,7 +121,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         return null;
     }
 
-    private object ReadJsonObject(IParser parser)
+    private object ReadJsonObject(IParser parser, ObjectDeserializer rootDeserializer)
     {
         var value = ReadJsonValue(parser);
 
@@ -141,15 +140,15 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 
                 if (parser.Accept<Scalar>(out var scalar))
                 {
-                    node[name.Value] = (JsonValue)ReadYaml(parser, typeof(JsonValue));
+                    node[name.Value] = (JsonValue)ReadYaml(parser, typeof(JsonValue), rootDeserializer);
                 }
                 else if (parser.Accept<MappingStart>(out var mapStart))
                 {
-                    node[name.Value] = (JsonObject)ReadYaml(parser, typeof(JsonObject));
+                    node[name.Value] = (JsonObject)ReadYaml(parser, typeof(JsonObject), rootDeserializer);
                 }
                 else if (parser.Accept<SequenceStart>(out var seqStart))
                 {
-                    node[name.Value] = (JsonArray)ReadYaml(parser, typeof(JsonArray));
+                    node[name.Value] = (JsonArray)ReadYaml(parser, typeof(JsonArray), rootDeserializer);
                 }
             }
 
@@ -159,7 +158,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         return node;
     }
 
-    private object ReadJsonArray(IParser parser)
+    private object ReadJsonArray(IParser parser, ObjectDeserializer rootDeserializer)
     {
         var array = new JsonArray();
 
@@ -169,15 +168,15 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
             {
                 if (parser.Accept<Scalar>(out var scalar))
                 {
-                    array.Add((JsonValue)ReadYaml(parser, typeof(JsonValue)));
+                    array.Add((JsonValue)ReadYaml(parser, typeof(JsonValue), rootDeserializer));
                 }
                 else if (parser.Accept<MappingStart>(out var mapStart))
                 {
-                    array.Add((JsonObject)ReadYaml(parser, typeof(JsonObject)));
+                    array.Add((JsonObject)ReadYaml(parser, typeof(JsonObject), rootDeserializer));
                 }
                 else if (parser.Accept<SequenceStart>(out var seqStart))
                 {
-                    array.Add((JsonArray)ReadYaml(parser, typeof(JsonArray)));
+                    array.Add((JsonArray)ReadYaml(parser, typeof(JsonArray), rootDeserializer));
                 }
             }
 
@@ -187,7 +186,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         return array;
     }
 
-    private JsonDocument ReadJsonDocument(IParser parser)
+    private JsonDocument ReadJsonDocument(IParser parser, ObjectDeserializer rootDeserializer)
     {
         if (parser.TryConsume<MappingStart>(out var start))
         {
@@ -199,15 +198,15 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 
                 if (parser.Accept<Scalar>(out var sc))
                 {
-                    node[name.Value] = (JsonValue)ReadYaml(parser, typeof(JsonValue));
+                    node[name.Value] = (JsonValue)ReadYaml(parser, typeof(JsonValue), rootDeserializer);
                 }
                 else if (parser.Accept<MappingStart>(out var mapStart))
                 {
-                    node[name.Value] = (JsonObject)ReadYaml(parser, typeof(JsonObject));
+                    node[name.Value] = (JsonObject)ReadYaml(parser, typeof(JsonObject), rootDeserializer);
                 }
                 else if (parser.Accept<SequenceStart>(out var seqStart))
                 {
-                    node[name.Value] = (JsonArray)ReadYaml(parser, typeof(JsonArray));
+                    node[name.Value] = (JsonArray)ReadYaml(parser, typeof(JsonArray), rootDeserializer);
                 }
             }
 
@@ -224,15 +223,15 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
             {
                 if (parser.Accept<Scalar>(out var scalar2))
                 {
-                    array.Add((JsonValue)ReadYaml(parser, typeof(JsonValue)));
+                    array.Add((JsonValue)ReadYaml(parser, typeof(JsonValue), rootDeserializer));
                 }
                 else if (parser.Accept<MappingStart>(out var mapStart))
                 {
-                    array.Add((JsonObject)ReadYaml(parser, typeof(JsonObject)));
+                    array.Add((JsonObject)ReadYaml(parser, typeof(JsonObject), rootDeserializer));
                 }
                 else if (parser.Accept<SequenceStart>(out var seqStart))
                 {
-                    array.Add((JsonArray)ReadYaml(parser, typeof(JsonArray)));
+                    array.Add((JsonArray)ReadYaml(parser, typeof(JsonArray), rootDeserializer));
                 }
             }
 
@@ -277,7 +276,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 
     // Write Functions
 
-    private void WriteJsonObject(IEmitter emitter, object value)
+    private void WriteJsonObject(IEmitter emitter, object value, ObjectSerializer serializer)
     {
         emitter.Emit(new MappingStart(null, null, false, MappingStyle.Any));
 
@@ -293,7 +292,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
             }
             else
             {
-                WriteYaml(emitter, propVal, propVal.GetType());
+                WriteYaml(emitter, propVal, propVal.GetType(), serializer);
             }
         }
 
@@ -391,7 +390,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         }
     }
 
-    private void WriteJsonArray(IEmitter emitter, object value)
+    private void WriteJsonArray(IEmitter emitter, object value, ObjectSerializer serializer)
     {
         var style = SequenceStyle.Any;
 
@@ -405,7 +404,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                 continue;
             }
 
-            WriteYaml(emitter, item, item.GetType());
+            WriteYaml(emitter, item, item.GetType(), serializer);
         }
 
         emitter.Emit(new SequenceEnd());
