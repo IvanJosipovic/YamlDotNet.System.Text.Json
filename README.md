@@ -25,6 +25,8 @@ Supported Objects:
   - Name - Specifies the property name that is present in the JSON/YAML when serializing and deserializing.
 - [System.Text.Json.Serialization.JsonPropertyOrderAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonpropertyorderattribute)
   - Order - Sets the serialization order of the property.
+- [System.Text.Json.Serialization.JsonStringEnumMemberNameAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonstringenummembernameattribute)
+  - Name - Sets the value for the Enum Member that is present in the JSON/YAML when serializing and deserializing.
 
 ## Installation
 
