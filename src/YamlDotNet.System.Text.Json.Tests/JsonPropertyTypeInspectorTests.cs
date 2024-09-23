@@ -1,11 +1,5 @@
 ﻿using FluentAssertions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests
@@ -33,6 +27,10 @@ namespace YamlDotNet.System.Text.Json.Tests
 
             [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
             public string Show3 { get; set; }
+
+            public TestEnum Enum { get; set; }
+
+            public IList<TestEnum> EnumList { get; set; }
         }
 
         public class TestModel2
@@ -47,6 +45,14 @@ namespace YamlDotNet.System.Text.Json.Tests
             public string MyProp3 { get; set; }
         }
 
+        public enum TestEnum
+        {
+            First,
+            [JsonStringEnumMemberName("val2")]
+            Second,
+            Third
+        }
+
         [Fact]
         public void Serialize()
         {
@@ -59,6 +65,11 @@ namespace YamlDotNet.System.Text.Json.Tests
                 Show = nameof(TestModel.Show),
                 Show2 = nameof(TestModel.Show2),
                 Show3 = nameof(TestModel.Show3),
+                Enum = TestEnum.Third,
+                EnumList =
+                [
+                    TestEnum.Third
+                ]
             };
 
             var yaml = YamlConverter.Serialize(model);
@@ -69,6 +80,9 @@ namespace YamlDotNet.System.Text.Json.Tests
                               Show: Show
                               Show2: Show2
                               Show3: Show3
+                              Enum: Third
+                              EnumList:
+                              - Third
 
                               """;
             yaml.Should().Be(expected);
@@ -83,6 +97,9 @@ namespace YamlDotNet.System.Text.Json.Tests
                         Show: test5
                         Show2: test6
                         Show3: test7
+                        Enum: Third
+                        EnumList:
+                        - Third
 
                         """;
 
@@ -93,6 +110,8 @@ namespace YamlDotNet.System.Text.Json.Tests
             model.Show.Should().Be("test5");
             model.Show2.Should().Be("test6");
             model.Show3.Should().Be("test7");
+            model.Enum.Should().Be(TestEnum.Third);
+            model.EnumList[0].Should().Be(TestEnum.Third);
         }
 
         [Fact]
@@ -142,6 +161,45 @@ namespace YamlDotNet.System.Text.Json.Tests
 
                               """;
             yaml.Should().Be(expected);
+        }
+
+        [Fact]
+        public void JsonStringEnumMemberNameSerialize()
+        {
+            var model = new TestModel()
+            {
+                Enum = TestEnum.Second,
+                EnumList =
+                [
+                    TestEnum.Second
+                ]
+            };
+
+            var yaml = YamlConverter.Serialize(model);
+
+            string expected = """
+                              Enum: val2
+                              EnumList:
+                              - val2
+
+                              """;
+            yaml.Should().Be(expected);
+        }
+
+        [Fact]
+        public void JsonStringEnumMemberNameDeserialize()
+        {
+            var yaml = """
+                        Enum: val2
+                        EnumList:
+                        - val2
+
+                        """;
+
+            var model = YamlConverter.Deserialize<TestModel>(yaml);
+
+            model.Enum.Should().Be(TestEnum.Second);
+            model.EnumList[0].Should().Be(TestEnum.Second);
         }
     }
 }
