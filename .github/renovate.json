@@ -5,15 +5,25 @@
   "dependencyDashboard": true,
   "dependencyDashboardTitle": "Renovate Dashboard",
   "semanticCommits": "enabled",
-  "suppressNotifications": [ "prIgnoreNotification" ],
+  "suppressNotifications": [
+    "prIgnoreNotification"
+  ],
   "rebaseWhen": "conflicted",
-  "assignees": [ "@ivanjosipovic" ],
-  "extends": [ "config:base" ],
+  "assignees": [
+    "@ivanjosipovic"
+  ],
+  "extends": [
+    "config:recommended"
+  ],
   "platformAutomerge": true,
   "packageRules": [
     {
       "automerge": true,
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
       "matchCurrentVersion": "!/^0/",
       "matchFileNames": [
         "src/YamlDotNet.System.Text.Json.Tests/YamlDotNet.System.Text.Json.Tests.csproj"
