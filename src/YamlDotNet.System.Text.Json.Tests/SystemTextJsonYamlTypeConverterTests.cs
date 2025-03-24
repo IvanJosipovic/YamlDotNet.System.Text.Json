@@ -18,6 +18,7 @@ public class SystemTextJsonYamlTypeConverterTests
             new object[] { "25" },
             new object[] { "\"25\"" },
             new object[] { "1.55" },
+            new object[] { "1E+300" },
             new object[] { "\"my string\"" },
             new object[] { "\"my string\"" },
             new object[] { "\"test\\ntest2\\ntest3\"" },
