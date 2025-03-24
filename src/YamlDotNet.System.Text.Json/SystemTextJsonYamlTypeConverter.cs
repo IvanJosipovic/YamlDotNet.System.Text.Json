@@ -95,9 +95,9 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                 {
                     return JsonValue.Create(i);
                 }
-                else if (float.TryParse(scalar.Value, out var f))
+                else if (double.TryParse(scalar.Value, out var d))
                 {
-                    return JsonValue.Create(f);
+                    return JsonValue.Create(d);
                 }
                 else if (bool.TryParse(scalar.Value, out var b))
                 {
@@ -248,9 +248,9 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                 {
                     return JsonSerializer.SerializeToDocument(i);
                 }
-                else if (float.TryParse(scalar.Value, out var f))
+                else if (double.TryParse(scalar.Value, out var d))
                 {
-                    return JsonSerializer.SerializeToDocument(f);
+                    return JsonSerializer.SerializeToDocument(d);
                 }
                 else if (bool.TryParse(scalar.Value, out var b))
                 {
@@ -365,7 +365,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                     // if string could be interpreted as a non-string value type, put quotes around it.
                     if (val == "null" ||
                         long.TryParse(val, out var _) ||
-                        float.TryParse(val, out var _) ||
+                        double.TryParse(val, out var _) ||
                         decimal.TryParse(val, out var _) ||
                         bool.TryParse(val, out var _))
                     {
