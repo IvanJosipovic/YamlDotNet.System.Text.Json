@@ -97,7 +97,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                 }
                 else if (double.TryParse(scalar.Value, out var d))
                 {
-                  return JsonValue.Create(d);
+                    return JsonValue.Create(d);
                 }
                 else if (bool.TryParse(scalar.Value, out var b))
                 {
