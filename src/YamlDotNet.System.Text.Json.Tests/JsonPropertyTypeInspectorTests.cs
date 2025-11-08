@@ -28,7 +28,7 @@ namespace YamlDotNet.System.Text.Json.Tests
             [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
             public string Show3 { get; set; }
 
-            public TestEnum Enum { get; set; }
+            public TestEnum? Enum { get; set; }
 
             public IList<TestEnum> EnumList { get; set; }
         }
@@ -138,21 +138,14 @@ namespace YamlDotNet.System.Text.Json.Tests
         [Fact]
         public void DisableOrder()
         {
-            ISerializer serializer = new SerializerBuilder()
-            .DisableAliases()
-            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
-            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
-            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x, true))
-            .Build();
-
-        var model = new TestModel2()
+            var model = new TestModel2()
             {
                 MyProp = nameof(TestModel2.MyProp),
                 MyProp2 = nameof(TestModel2.MyProp2),
                 MyProp3 = nameof(TestModel2.MyProp3),
             };
 
-            var yaml = YamlConverter.Serialize(model, serializer);
+            var yaml = YamlConverter.Serialize(model, null, false, true);
 
             string expected = """
                               MyProp: MyProp

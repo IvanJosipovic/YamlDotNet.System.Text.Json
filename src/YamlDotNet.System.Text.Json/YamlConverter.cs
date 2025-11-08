@@ -1,17 +1,18 @@
 ﻿using System.Text.Json;
 using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NodeDeserializers;
 
 namespace YamlDotNet.System.Text.Json;
 
 public static class YamlConverter
 {
-    private static ISerializer GetSerializer(bool sortAlphabetically = false)
+    private static ISerializer GetSerializer(bool sortAlphabetically = false, bool ignoreOrder = false)
     {
         return new SerializerBuilder()
             .DisableAliases()
             .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
             .WithTypeConverter(new SystemTextJsonYamlTypeConverter(sortAlphabetically))
-            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
+            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x, ignoreOrder))
             .Build();
     }
 
@@ -20,18 +21,20 @@ public static class YamlConverter
         return new DeserializerBuilder()
             .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
             .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
+            .WithNodeDeserializer(inner => new SystemTextJsonExtensionDataNodeDeserializer(inner),
+                s => s.InsteadOf<ObjectNodeDeserializer>())
             .Build();
     }
 
-    public static string Serialize(object obj, ISerializer? serializer = null, bool sortAlphabetically = false)
+    public static string Serialize(object obj, ISerializer? serializer = null, bool sortAlphabetically = false, bool ignoreOrder = false)
     {
-        serializer ??= GetSerializer(sortAlphabetically);
+        serializer ??= GetSerializer(sortAlphabetically, ignoreOrder);
         return serializer.Serialize(obj);
     }
 
-    public static string SerializeJson(string json, ISerializer? serializer = null, JsonSerializerOptions jsonSerializerOptions = null, bool sortAlphabetically = false)
+    public static string SerializeJson(string json, ISerializer? serializer = null, JsonSerializerOptions? jsonSerializerOptions = null, bool sortAlphabetically = false, bool ignoreOrder = false)
     {
-        serializer ??= GetSerializer(sortAlphabetically);
+        serializer ??= GetSerializer(sortAlphabetically, ignoreOrder);
         return serializer.Serialize(JsonSerializer.Deserialize<JsonDocument>(json, jsonSerializerOptions));
     }
 
