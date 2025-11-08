@@ -15,7 +15,7 @@ public static class BuilderExtensions
     /// <param name="sortAlphabetically">Specifies whether object properties should be sorted alphabetically during serialization. Set to <see langword="true"/> to sort properties; otherwise, properties retain their original order.</param>
     /// <param name="ignoreOrder">Specifies whether <see cref="JsonPropertyOrderAttribute"/> should be ignored during type inspection. Set to <see langword="true"/> to ignore the attribute-defined order; otherwise, any order defined via <see cref="JsonPropertyOrderAttribute"/> is preserved.</param>
     /// <returns>The same <see cref="SerializerBuilder"/> instance, configured to use System.Text.Json for YAML serialization.</returns>
-    public static SerializerBuilder AddSystemTestJson(this SerializerBuilder builder, bool sortAlphabetically = false, bool ignoreOrder = false)
+    public static SerializerBuilder AddSystemTextJson(this SerializerBuilder builder, bool sortAlphabetically = false, bool ignoreOrder = false)
     {
         builder.WithTypeConverter(new SystemTextJsonYamlTypeConverter(sortAlphabetically));
         builder.WithTypeInspector(x => new SystemTextJsonTypeInspector(x, ignoreOrder));

@@ -10,7 +10,7 @@ public static class YamlConverter
         return new SerializerBuilder()
             .DisableAliases()
             .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
-            .AddSystemTestJson(sortAlphabetically, ignoreOrder)
+            .AddSystemTextJson(sortAlphabetically, ignoreOrder)
             .Build();
     }
 
