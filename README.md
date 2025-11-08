@@ -57,13 +57,13 @@ using YamlDotNet.Serialization;
 using YamlDotNet.System.Text.Json;
 
 var serializer = new SerializerBuilder()
-            .AddSystemTestJson()
+            .AddSystemTextJson()
             .Build();
 
 var yaml = serializer.Serialize(obj);
 
 var deserializer = new DeserializerBuilder()
-            .AddSystemTestJson()
+            .AddSystemTextJson()
             .Build();
 
 var myObject = deserializer.Deserialize<MyType>(yaml)

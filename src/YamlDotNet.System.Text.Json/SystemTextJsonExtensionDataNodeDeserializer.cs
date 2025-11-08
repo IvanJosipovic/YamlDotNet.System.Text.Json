@@ -67,18 +67,18 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         return true;
     }
 
-    private static PropertyInfo? FindExtensionDictProperty(Type t)
+    private static PropertyInfo? FindExtensionDictProperty(Type type)
     {
-        foreach (var p in t.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+        foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
-            if (p.GetCustomAttribute<JsonExtensionDataAttribute>() is null) continue;
+            if (property.GetCustomAttribute<JsonExtensionDataAttribute>() is null) continue;
 
-            var kv = GetIdictionaryKVTypes(p.PropertyType);
+            var kv = GetIdictionaryKVTypes(property.PropertyType);
             if (kv is null) continue;
 
             var (keyT, valT) = kv.Value;
             if (keyT == typeof(string) && (valT == typeof(object) || valT == typeof(JsonElement)))
-                return p;
+                return property;
         }
         return null;
     }
@@ -167,18 +167,20 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         return JsonSerializer.SerializeToElement(value, value?.GetType() ?? typeof(object));
     }
 
-    private static Dictionary<string, PropertyInfo> GetWritableProps(Type t)
+    private static Dictionary<string, PropertyInfo> GetWritableProps(Type type)
     {
         var dict = new Dictionary<string, PropertyInfo>(StringComparer.OrdinalIgnoreCase);
-        foreach (var p in t.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+
+        foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
-            if (!p.CanWrite) continue;
-            if (p.GetCustomAttribute<JsonExtensionDataAttribute>() != null) continue;
+            if (!property.CanWrite) continue;
 
-            var alias = p.GetCustomAttribute<YamlMemberAttribute>()?.Alias;
-            if (!string.IsNullOrWhiteSpace(alias)) dict[alias!] = p;
+            if (property.GetCustomAttribute<JsonExtensionDataAttribute>() != null) continue;
 
-            dict[p.Name] = p;
+            var alias = property.GetCustomAttribute<YamlMemberAttribute>()?.Alias;
+            if (!string.IsNullOrWhiteSpace(alias)) dict[alias!] = property;
+
+            dict[property.Name] = property;
         }
         return dict;
     }

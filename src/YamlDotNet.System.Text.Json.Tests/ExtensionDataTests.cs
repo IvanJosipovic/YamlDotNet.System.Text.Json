@@ -11,23 +11,23 @@ namespace YamlDotNet.System.Text.Json.Tests
         public class TestJsonExtensionDataModel
         {
             [JsonExtensionData]
-            public Dictionary<string, JsonElement> ExtensionData { get; set; }
+            public Dictionary<string, JsonElement>? ExtensionData { get; set; }
         }
 
         public class TestJsonExtensionDataModelObject
         {
             [JsonExtensionData]
-            public Dictionary<string, object> ExtensionData { get; set; }
+            public Dictionary<string, object>? ExtensionData { get; set; }
         }
 
         public class TestJsonExtensionDataModelMixed
         {
-            public string before { get; set; }
+            public string? before { get; set; }
 
             [JsonExtensionData]
-            public Dictionary<string, JsonElement> ExtensionData { get; set; }
+            public Dictionary<string, JsonElement>? ExtensionData { get; set; }
 
-            public string after { get; set; }
+            public string? after { get; set; }
         }
 
         [Fact]
