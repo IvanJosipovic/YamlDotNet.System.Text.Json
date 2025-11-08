@@ -115,7 +115,7 @@ namespace YamlDotNet.System.Text.Json.Tests
         }
 
         [Fact]
-        public void Order()
+        public void PropertyOrder()
         {
             var model = new TestModel2()
             {
@@ -136,7 +136,7 @@ namespace YamlDotNet.System.Text.Json.Tests
         }
 
         [Fact]
-        public void DisableOrder()
+        public void DisablePropertyOrder()
         {
             var model = new TestModel2()
             {

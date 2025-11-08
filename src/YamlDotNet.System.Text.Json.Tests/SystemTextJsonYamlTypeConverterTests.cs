@@ -83,15 +83,14 @@ public class SystemTextJsonYamlTypeConverterTests
     }
 
     [Theory]
-    [MemberData(nameof(GetValueTests))]
-    [MemberData(nameof(GetObjectTests))]
-    public void JsonNodeTests(string val)
+    [MemberData(nameof(GetArrayTests))]
+    public void JsonArrayTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonNode>(val, JsonSerializerOptions);
+        var input = JsonSerializer.Deserialize<JsonArray>(val, JsonSerializerOptions);
 
         var yaml = YamlConverter.Serialize(input);
 
-        var output = YamlConverter.Deserialize<JsonNode>(yaml);
+        var output = YamlConverter.Deserialize<JsonArray>(yaml);
 
         Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
@@ -110,14 +109,16 @@ public class SystemTextJsonYamlTypeConverterTests
     }
 
     [Theory]
+    [MemberData(nameof(GetValueTests))]
+    [MemberData(nameof(GetObjectTests))]
     [MemberData(nameof(GetArrayTests))]
-    public void JsonArrayTests(string val)
+    public void JsonNodeTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonArray>(val, JsonSerializerOptions);
+        var input = JsonSerializer.Deserialize<JsonNode>(val, JsonSerializerOptions);
 
         var yaml = YamlConverter.Serialize(input);
 
-        var output = YamlConverter.Deserialize<JsonArray>(yaml);
+        var output = YamlConverter.Deserialize<JsonNode>(yaml);
 
         Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
