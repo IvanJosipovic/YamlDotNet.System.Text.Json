@@ -48,38 +48,25 @@ var yaml = YamlConverter.SerializeJson(someJson);
 var obj = YamlConverter.Deserialize<MyTypedObject>(yaml);
 ```
 
-## How to use manually
-
-### SystemTextJsonYamlTypeConverter
-This is a type converter for reading and writing System.Text.Json objects.
-
-``` .WithTypeConverter(new SystemTextJsonYamlTypeConverter())```
-
-### SystemTextJsonTypeInspector
-This is a type inspector for reading System.Text.Json Attributes
-
-``` .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))```
-
-### SystemTextJsonExtensionDataNodeDeserializer
-This is a Node Deserializer used to read JsonExtensionDataAttribute
-
-``` .WithNodeDeserializer(inner => new SystemTextJsonExtensionDataNodeDeserializer(inner),
-                s => s.InsteadOf<ObjectNodeDeserializer>())
-```
+## How to integrate with YamlDotNet
 
 Example:
 
 ```csharp
+using YamlDotNet.Serialization;
+using YamlDotNet.System.Text.Json;
+
 var serializer = new SerializerBuilder()
-            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
-            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
+            .AddSystemTestJson()
             .Build();
+
+var yaml = serializer.Serialize(obj);
+
 var deserializer = new DeserializerBuilder()
-            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
-            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
-            .WithNodeDeserializer(inner => new SystemTextJsonExtensionDataNodeDeserializer(inner),
-                s => s.InsteadOf<ObjectNodeDeserializer>())
+            .AddSystemTestJson()
             .Build();
+
+var myObject = deserializer.Deserialize<MyType>(yaml)
 ```
 
 ### Inspired By

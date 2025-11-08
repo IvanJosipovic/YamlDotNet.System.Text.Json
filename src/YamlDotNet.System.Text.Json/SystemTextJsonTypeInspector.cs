@@ -93,7 +93,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
                             foreach (var entry in extData)
                             {
                                 // Create a property descriptor for each extension data key/value.
-                                var extProp = new ExtensionDataPropertyDescriptor(entry.Key.ToString(), entry.Value);
+                                var extProp = new ExtensionDataPropertyDescriptor(entry.Key, entry.Value);
                                 props.Add(extProp);
                             }
                         }
@@ -102,7 +102,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
                             foreach (var entry in extData2)
                             {
                                 // Create a property descriptor for each extension data key/value.
-                                var extProp = new ExtensionDataPropertyDescriptor(entry.Key.ToString(), entry.Value);
+                                var extProp = new ExtensionDataPropertyDescriptor(entry.Key, entry.Value);
                                 props.Add(extProp);
                             }
                         }
@@ -134,6 +134,10 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
             });
 
         // Combine declared and extension properties.
+        if (ignoreOrder)
+        {
+            return declaredProperties;
+        }
         return declaredProperties.OrderBy(p => p.Order);
     }
 
@@ -213,17 +217,15 @@ public class ExtensionDataPropertyDescriptor : IPropertyDescriptor
 
     public bool CanWrite => false;
 
-    public Type DeclaringType => Type;
+    public bool AllowNulls => true;
 
-    public bool AllowNulls => throw new NotImplementedException();
+    public Type? TypeOverride { get; set; }
 
-    public Type? TypeOverride { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-    public bool Required => throw new NotImplementedException();
+    public bool Required => false;
 
     public Type? ConverterType => null;
 
-    public T GetCustomAttribute<T>() where T : Attribute
+    public T? GetCustomAttribute<T>() where T : Attribute
     {
         return null;
     }
