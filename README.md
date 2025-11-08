@@ -27,6 +27,7 @@ Supported Objects:
   - Order - Sets the serialization order of the property.
 - [System.Text.Json.Serialization.JsonStringEnumMemberNameAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonstringenummembernameattribute)
   - Name - Sets the value for the Enum Member that is present in the JSON/YAML when serializing and deserializing.
+- [System.Text.Json.Serialization.JsonExtensionDataAttribute](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonextensiondataattribute)
 
 ## Installation
 
@@ -59,6 +60,13 @@ This is a type inspector for reading System.Text.Json Attributes
 
 ``` .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))```
 
+### SystemTextJsonExtensionDataNodeDeserializer
+This is a Node Deserializer used to read JsonExtensionDataAttribute
+
+``` .WithNodeDeserializer(inner => new SystemTextJsonExtensionDataNodeDeserializer(inner),
+                s => s.InsteadOf<ObjectNodeDeserializer>())
+```
+
 Example:
 
 ```csharp
@@ -69,6 +77,8 @@ var serializer = new SerializerBuilder()
 var deserializer = new DeserializerBuilder()
             .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
             .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
+            .WithNodeDeserializer(inner => new SystemTextJsonExtensionDataNodeDeserializer(inner),
+                s => s.InsteadOf<ObjectNodeDeserializer>())
             .Build();
 ```
 
