@@ -1,4 +1,4 @@
-﻿
+
 namespace YamlDotNet.System.Text.Json.Tests;
 
 public class Json2YamlTests

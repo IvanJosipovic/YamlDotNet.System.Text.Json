@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -171,7 +171,6 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
                 // This means we need to support arbitrary properties
                 return jsonExtensionData;
             }
-
 
             throw new SerializationException($"Property '{name}' not found on type '{type.FullName}'.");
         }

@@ -6,7 +6,7 @@ namespace YamlDotNet.System.Text.Json.Tests;
 
 public class TypeConverterTests
 {
-    private static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions()
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions()
     {
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };

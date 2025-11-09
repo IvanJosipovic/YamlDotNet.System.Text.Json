@@ -1,8 +1,7 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using YamlDotNet.Serialization;
 namespace YamlDotNet.System.Text.Json;
-
 
 /// <summary>
 /// Provides static methods for serializing objects to YAML, deserializing YAML to objects, and converting JSON to YAML

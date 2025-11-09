@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
@@ -22,7 +22,6 @@ public class EnumTests
         Second,
         Third
     }
-
 
     [Fact]
     public void EnumSerialize()
@@ -67,7 +66,7 @@ public class EnumTests
         model.Enum.ShouldBe(TestEnum.Third);
         model.EnumName.ShouldBe(TestEnum.Second);
         model.EnumNull.ShouldBeNull();
-        model.EnumList.Count.ShouldBe(1);
+        model.EnumList!.Count.ShouldBe(1);
         model.EnumList[0].ShouldBe(TestEnum.Second);
     }
 }

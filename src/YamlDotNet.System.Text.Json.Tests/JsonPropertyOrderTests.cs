@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
@@ -15,7 +15,6 @@ public class JsonPropertyOrderTests
         [JsonPropertyOrder(1)]
         public string MyProp3 { get; set; }
     }
-
 
     [Fact]
     public void PropertyOrder()
@@ -48,7 +47,7 @@ public class JsonPropertyOrderTests
             MyProp3 = nameof(TestModel2.MyProp3),
         };
 
-        var yaml = YamlConverter.Serialize(model,ignoreOrder: true);
+        var yaml = YamlConverter.Serialize(model, ignoreOrder: true);
 
         string expected = """
                           MyProp: MyProp
