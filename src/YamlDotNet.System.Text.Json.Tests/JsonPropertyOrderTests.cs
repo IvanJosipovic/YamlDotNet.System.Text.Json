@@ -2,7 +2,7 @@
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
-public class JsonPoropertyOrderTests
+public class JsonPropertyOrderTests
 {
     public class TestModel2
     {
