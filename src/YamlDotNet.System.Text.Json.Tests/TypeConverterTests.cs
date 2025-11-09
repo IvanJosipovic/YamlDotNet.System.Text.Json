@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
-public class SystemTextJsonYamlTypeConverterTests
+public class TypeConverterTests
 {
     private static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions()
     {
@@ -169,7 +169,7 @@ public class SystemTextJsonYamlTypeConverterTests
     {
         var input = JsonSerializer.Deserialize<JsonNode>(inputVal, JsonSerializerOptions);
 
-        var yaml = YamlConverter.Serialize(input, null, true);
+        var yaml = YamlConverter.Serialize(input, sortAlphabetically: true);
 
         var output = YamlConverter.Deserialize<JsonNode>(yaml);
 

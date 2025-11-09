@@ -1,16 +1,12 @@
 ﻿using System.Text.Json.Serialization;
-using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
-public partial class JsonPropertyTypeInspectorTests
+public partial class JsonIgnoreTests
 {
     public class TestModel
     {
-        [JsonPropertyName("MyNewPropName")]
         public string MyProp { get; set; }
-
-        public string MyProp2 { get; set; }
 
         [JsonIgnore()]
         public string Hide { get; set; }
@@ -34,7 +30,6 @@ public partial class JsonPropertyTypeInspectorTests
         var model = new TestModel()
         {
             MyProp = nameof(TestModel.MyProp),
-            MyProp2 = nameof(TestModel.MyProp2),
             Hide = nameof(TestModel.Hide),
             Hide2 = nameof(TestModel.Hide2),
             Show = nameof(TestModel.Show),
@@ -45,22 +40,20 @@ public partial class JsonPropertyTypeInspectorTests
         var yaml = YamlConverter.Serialize(model);
 
         string expected = """
-                          MyNewPropName: MyProp
-                          MyProp2: MyProp2
+                          MyProp: MyProp
                           Show: Show
                           Show2: Show2
                           Show3: Show3
 
                           """;
-        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
+        yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 
     [Fact]
     public void Deserialize()
     {
         var yaml = """
-                    MyNewPropName: test
-                    MyProp2: test2
+                    MyProp: test
                     Show: test5
                     Show2: test6
                     Show3: test7
@@ -70,7 +63,6 @@ public partial class JsonPropertyTypeInspectorTests
         var model = YamlConverter.Deserialize<TestModel>(yaml);
 
         model.MyProp.ShouldBe("test");
-        model.MyProp2.ShouldBe("test2");
         model.Show.ShouldBe("test5");
         model.Show2.ShouldBe("test6");
         model.Show3.ShouldBe("test7");

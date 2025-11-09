@@ -35,7 +35,7 @@ public class JsonPropertyOrderTests
                           MyProp: MyProp
 
                           """;
-        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
+        yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class JsonPropertyOrderTests
             MyProp3 = nameof(TestModel2.MyProp3),
         };
 
-        var yaml = YamlConverter.Serialize(model, null, false, true);
+        var yaml = YamlConverter.Serialize(model,ignoreOrder: true);
 
         string expected = """
                           MyProp: MyProp
@@ -56,6 +56,6 @@ public class JsonPropertyOrderTests
                           MyProp3: MyProp3
 
                           """;
-        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
+        yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 }
