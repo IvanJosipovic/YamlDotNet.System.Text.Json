@@ -206,7 +206,7 @@ public class ExtensionDataPropertyDescriptor : IPropertyDescriptor
     public string Name
     {
         get => name;
-        set { /* read-only */ }
+        set => throw new NotSupportedException("The Name property is read-only and cannot be set.");
     }
 
     public Type Type => value?.GetType() ?? typeof(object);
@@ -235,8 +235,5 @@ public class ExtensionDataPropertyDescriptor : IPropertyDescriptor
         return new ObjectDescriptor(value, Type, Type);
     }
 
-    public void Write(object target, object value)
-    {
-        // Writing not supported.
-    }
+    public void Write(object target, object value) => throw new NotSupportedException("Writing extension data properties is not supported.");
 }
