@@ -52,7 +52,7 @@ public partial class JsonPropertyTypeInspectorTests
                           Show3: Show3
 
                           """;
-        yaml.ShouldBe(expected);
+        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
     }
 
     [Fact]

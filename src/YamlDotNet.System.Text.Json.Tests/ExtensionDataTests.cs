@@ -44,7 +44,7 @@ public class ExtensionDataTests
                           test: test-value
 
                           """;
-        yaml.ShouldBe(expected);
+        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class ExtensionDataTests
                           test: test-value
 
                           """;
-        yaml.ShouldBe(expected);
+        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class ExtensionDataTests
                           test: test-value
 
                           """;
-        yaml.ShouldBe(expected);
+        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
     }
 
     [Fact]
