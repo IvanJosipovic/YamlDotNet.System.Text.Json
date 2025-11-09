@@ -6,40 +6,32 @@ public partial class JsonIgnoreTests
 {
     public class TestModel
     {
-        public string MyProp { get; set; }
+        public string MyProp { get; set; } = nameof(TestModel.MyProp);
 
         [JsonIgnore()]
-        public string Hide { get; set; }
+        public string Hide { get; set; } = nameof(TestModel.Hide);
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public string Hide2 { get; set; }
+        public string Hide2 { get; set; } = nameof(TestModel.Hide2);
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string Show { get; set; }
+        public string Show { get; set; } = nameof(TestModel.Show);
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public string Show2 { get; set; }
+        public string Show2 { get; set; } = nameof(TestModel.Show2);
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
-        public string Show3 { get; set; }
+        public string Show3 { get; set; } = nameof(TestModel.Show3);
     }
 
     [Fact]
     public void Serialize()
     {
-        var model = new TestModel()
-        {
-            MyProp = nameof(TestModel.MyProp),
-            Hide = nameof(TestModel.Hide),
-            Hide2 = nameof(TestModel.Hide2),
-            Show = nameof(TestModel.Show),
-            Show2 = nameof(TestModel.Show2),
-            Show3 = nameof(TestModel.Show3),
-        };
+        var model = new TestModel();
 
         var yaml = YamlConverter.Serialize(model);
 
-        string expected = """
+        var expected = """
                           MyProp: MyProp
                           Show: Show
                           Show2: Show2

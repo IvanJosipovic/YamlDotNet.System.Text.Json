@@ -68,7 +68,6 @@ public static class YamlConverter
     /// to be valid and compatible with the target type.</remarks>
     /// <typeparam name="T">The type of object to deserialize the YAML content into.</typeparam>
     /// <param name="yaml">The YAML string to deserialize. Cannot be null.</param>
-    /// <param name="deserializer">An optional deserializer instance to use. If null, a default deserializer is used.</param>
     /// <returns>An instance of type T populated with data from the YAML string.</returns>
     public static T Deserialize<T>(string yaml)
     {

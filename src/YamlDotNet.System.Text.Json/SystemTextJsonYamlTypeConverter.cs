@@ -23,6 +23,14 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         SortKeysAlphabetically = sortKeysAlphabetically;
     }
 
+    /// <summary>
+    /// Determines whether the specified type is supported for JSON node processing.
+    /// </summary>
+    /// <remarks>This method is typically used to check if a type can be handled by APIs that operate on JSON
+    /// nodes, elements, or documents. Passing a null value for the type parameter will result in an
+    /// exception.</remarks>
+    /// <param name="type">The type to evaluate for compatibility with JSON node operations. Must not be null.</param>
+    /// <returns>true if the specified type is assignable from JsonNode, or is JsonElement or JsonDocument; otherwise, false.</returns>
     public bool Accepts(Type type)
     {
         return typeof(JsonNode).IsAssignableFrom(type)
@@ -30,6 +38,16 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
             || type == typeof(JsonDocument);
     }
 
+    /// <summary>
+    /// Deserializes YAML content from the specified parser into an object of the given type using the provided root
+    /// deserializer.
+    /// </summary>
+    /// <remarks>Supported types include JsonValue, JsonArray, JsonObject, JsonNode, JsonDocument, and
+    /// JsonElement. If the type is not one of these, the method returns null.</remarks>
+    /// <param name="parser">The parser that reads the YAML input to be deserialized.</param>
+    /// <param name="type">The target type to deserialize the YAML content into. Must be compatible with supported JSON node types.</param>
+    /// <param name="rootDeserializer">The root deserializer used to convert YAML nodes into .NET objects.</param>
+    /// <returns>An object representing the deserialized YAML content, or null if the specified type is not supported.</returns>
     public object? ReadYaml(IParser parser, Type type, ObjectDeserializer rootDeserializer)
     {
         if (typeof(JsonValue).IsAssignableFrom(type))
@@ -60,11 +78,21 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
         return null;
     }
 
+    /// <summary>
+    /// Serializes the specified JSON value to YAML format using the provided emitter and serializer.
+    /// </summary>
+    /// <remarks>This method supports serializing various System.Text.Json types to YAML. The correct
+    /// serialization logic is selected based on the runtime type of the value. The emitter must be valid and ready to
+    /// receive YAML events.</remarks>
+    /// <param name="emitter">The YAML emitter used to write the serialized output.</param>
+    /// <param name="value">The JSON value to serialize. Can be a JsonValue, JsonArray, JsonObject, JsonNode, JsonDocument, or JsonElement.</param>
+    /// <param name="type">The type of the value to serialize. Determines how the value is processed.</param>
+    /// <param name="serializer">The object serializer used to convert values to YAML nodes.</param>
     public void WriteYaml(IEmitter emitter, object? value, Type type, ObjectSerializer serializer)
     {
         if (typeof(JsonValue).IsAssignableFrom(type))
         {
-            WriteJsonValue(emitter, value, serializer);
+            WriteJsonValue(emitter!, value, serializer);
         }
         else if (typeof(JsonArray).IsAssignableFrom(type))
         {
@@ -110,17 +138,12 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                 }
                 else if (scalar.Value == "null")
                 {
-                    return JsonValue.Create((object)null);
-                }
-                else if (scalar.Value.GetType() == typeof(string))
-                {
-                    return JsonValue.Create(scalar.Value);
+                    return null;
                 }
             }
-            else
-            {
-                return JsonValue.Create(scalar.Value);
-            }
+
+            // Always a string here
+            return JsonValue.Create(scalar.Value);
         }
 
         return null;
@@ -259,7 +282,9 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                 case JsonValueKind.String:
                     var valStr = val.ToString();
 
+#pragma warning disable CA1307 // Specify StringComparison for clarity
                     if (valStr.IndexOf('\n') > 0)
+#pragma warning restore CA1307 // Specify StringComparison for clarity
                     {
                         // force it to be multi-line literal (aka |)
                         emitter.Emit(new Scalar(null, null, valStr, ScalarStyle.Literal, true, true));
@@ -280,13 +305,16 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                             emitter.Emit(new Scalar(valStr));
                         }
                     }
+
                     break;
                 case JsonValueKind.Number:
                     emitter.Emit(new Scalar(val.ToString()));
                     break;
                 case JsonValueKind.True:
                 case JsonValueKind.False:
-                    emitter.Emit(new Scalar(val.ToString().ToLower()));
+#pragma warning disable CA1308 // Normalize strings to uppercase
+                    emitter.Emit(new Scalar(val.ToString().ToLowerInvariant()));
+#pragma warning restore CA1308 // Normalize strings to uppercase
                     break;
                 case JsonValueKind.Null:
                     emitter.Emit(new Scalar(null, "null"));

@@ -7,23 +7,19 @@ public partial class JsonPropertyNameTests
     public class TestModel
     {
         [JsonPropertyName("MyNewPropName")]
-        public string MyProp { get; set; }
+        public string MyProp { get; set; } = nameof(TestModel.MyProp);
 
-        public string MyProp2 { get; set; }
+        public string MyProp2 { get; set; } = nameof(TestModel.MyProp2);
     }
 
     [Fact]
     public void Serialize()
     {
-        var model = new TestModel()
-        {
-            MyProp = nameof(TestModel.MyProp),
-            MyProp2 = nameof(TestModel.MyProp2),
-        };
+        var model = new TestModel();
 
         var yaml = YamlConverter.Serialize(model);
 
-        string expected = """
+        var expected = """
                           MyNewPropName: MyProp
                           MyProp2: MyProp2
 

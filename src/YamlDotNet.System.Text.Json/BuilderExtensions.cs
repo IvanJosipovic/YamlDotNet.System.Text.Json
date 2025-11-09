@@ -4,6 +4,13 @@ using YamlDotNet.Serialization.NodeDeserializers;
 
 namespace YamlDotNet.System.Text.Json;
 
+/// <summary>
+/// Provides extension methods for configuring System.Text.Json serialization and deserialization support in YAML
+/// serializer and deserializer builders.
+/// </summary>
+/// <remarks>Use the methods in this class to enable System.Text.Json type handling when working with YAML
+/// serialization or deserialization. These extensions allow integration of System.Text.Json features, such as property
+/// ordering and extension data, into YAML processing workflows.</remarks>
 public static class BuilderExtensions
 {
     /// <summary>

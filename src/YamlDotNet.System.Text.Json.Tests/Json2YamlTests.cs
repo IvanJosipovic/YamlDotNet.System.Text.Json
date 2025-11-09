@@ -14,7 +14,7 @@ public class Json2YamlTests
 
         var yaml = YamlConverter.SerializeJson(json);
 
-        string expected = """
+        var expected = """
                           Temperature: '25'
 
                           """;
@@ -33,7 +33,7 @@ public class Json2YamlTests
 
         var yaml = YamlConverter.SerializeJson(json, sortAlphabetically: true);
 
-        string expected = """
+        var expected = """
                           a: '1'
                           b: '2'
 

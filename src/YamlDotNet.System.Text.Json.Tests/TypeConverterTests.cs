@@ -75,7 +75,7 @@ public class TypeConverterTests
     {
         var input = JsonSerializer.Deserialize<JsonValue>(val, JsonSerializerOptions);
 
-        var yaml = YamlConverter.Serialize(input);
+        var yaml = YamlConverter.Serialize(input!);
 
         var output = YamlConverter.Deserialize<JsonValue>(yaml);
 
@@ -88,7 +88,7 @@ public class TypeConverterTests
     {
         var input = JsonSerializer.Deserialize<JsonArray>(val, JsonSerializerOptions);
 
-        var yaml = YamlConverter.Serialize(input);
+        var yaml = YamlConverter.Serialize(input!);
 
         var output = YamlConverter.Deserialize<JsonArray>(yaml);
 
@@ -101,7 +101,7 @@ public class TypeConverterTests
     {
         var input = JsonSerializer.Deserialize<JsonObject>(val, JsonSerializerOptions);
 
-        var yaml = YamlConverter.Serialize(input);
+        var yaml = YamlConverter.Serialize(input!);
 
         var output = YamlConverter.Deserialize<JsonObject>(yaml);
 
@@ -116,7 +116,7 @@ public class TypeConverterTests
     {
         var input = JsonSerializer.Deserialize<JsonNode>(val, JsonSerializerOptions);
 
-        var yaml = YamlConverter.Serialize(input);
+        var yaml = YamlConverter.Serialize(input!);
 
         var output = YamlConverter.Deserialize<JsonNode>(yaml);
 
@@ -146,7 +146,7 @@ public class TypeConverterTests
     {
         var input = JsonSerializer.Deserialize<JsonDocument>(val, JsonSerializerOptions);
 
-        var yaml = YamlConverter.Serialize(input);
+        var yaml = YamlConverter.Serialize(input!);
 
         var output = YamlConverter.Deserialize<JsonDocument>(yaml);
 
@@ -169,7 +169,7 @@ public class TypeConverterTests
     {
         var input = JsonSerializer.Deserialize<JsonNode>(inputVal, JsonSerializerOptions);
 
-        var yaml = YamlConverter.Serialize(input, sortAlphabetically: true);
+        var yaml = YamlConverter.Serialize(input!, sortAlphabetically: true);
 
         var output = YamlConverter.Deserialize<JsonNode>(yaml);
 

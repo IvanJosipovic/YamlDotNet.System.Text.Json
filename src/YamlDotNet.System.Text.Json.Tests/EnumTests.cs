@@ -38,7 +38,7 @@ public class EnumTests
 
         var yaml = YamlConverter.Serialize(model);
 
-        string expected = """
+        var expected = """
                           Enum: Third
                           EnumName: val2
                           EnumNull: 

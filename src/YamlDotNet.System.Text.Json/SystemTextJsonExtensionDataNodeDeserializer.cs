@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using YamlDotNet.Core;
@@ -11,18 +11,33 @@ namespace YamlDotNet.System.Text.Json;
 /// Provides YAML deserialization support for types with extension data properties, enabling additional unmapped data to
 /// be captured during deserialization.
 /// </summary>
-/// <remarks>This class decorates an existing <see cref="INodeDeserializer"/> and adds handling for properties
-/// marked with <see cref="System.Text.Json.Serialization.JsonExtensionDataAttribute"/>. When deserializing a mapping
-/// node, any keys not matching known properties are stored in the extension data dictionary, allowing round-tripping of
-/// extra YAML fields. Only extension data properties of type <see cref="IDictionary{string, object}"/> or <see
-/// cref="IDictionary{string, JsonElement}"/> are supported. This class is sealed and intended for use within custom
-/// YAML deserialization pipelines.</remarks>
 public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeserializer
 {
     private readonly INodeDeserializer _inner;
 
+    /// <summary>
+    /// Initializes a new instance of the SystemTextJsonExtensionDataNodeDeserializer class using the specified inner
+    /// node deserializer.
+    /// </summary>
+    /// <param name="inner">The inner node deserializer to use for delegating deserialization operations. Cannot be null.</param>
     public SystemTextJsonExtensionDataNodeDeserializer(INodeDeserializer inner) => _inner = inner;
 
+    /// <summary>
+    /// Deserializes a YAML mapping into an object of the specified type, populating known properties and storing
+    /// unknown keys in an extension dictionary if present.
+    /// </summary>
+    /// <remarks>If the target type defines an extension dictionary property, unknown YAML keys are stored in
+    /// that dictionary. Known properties are set using the provided deserializer delegate. The method returns false if
+    /// the input does not represent a mapping or if deserialization is not possible.</remarks>
+    /// <param name="reader">The parser used to read YAML events from the input stream.</param>
+    /// <param name="expectedType">The type of object to create and populate from the YAML mapping.</param>
+    /// <param name="nestedObjectDeserializer">A delegate used to deserialize nested objects or property values from the parser.</param>
+    /// <param name="value">When this method returns, contains the deserialized object if successful; otherwise, <see langword="null"/>.</param>
+    /// <param name="rootDeserializer">The root object deserializer used for handling complex or nested deserialization scenarios.</param>
+    /// <returns>true if the YAML mapping was successfully deserialized into an object; otherwise, false.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if an instance of <paramref name="expectedType"/> cannot be created, typically due to a missing
+    /// parameterless constructor.</exception>
+    /// <exception cref="YamlException">Thrown if a mapping key in the YAML is not a scalar value.</exception>
     public bool Deserialize(
         IParser reader,
         Type expectedType,
@@ -32,10 +47,14 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
     {
         var extProp = FindExtensionDictProperty(expectedType);
         if (extProp is null)
+        {
             return _inner.Deserialize(reader, expectedType, nestedObjectDeserializer, out value, rootDeserializer);
+        }
 
         if (!reader.TryConsume<MappingStart>(out var mapStart))
+        {
             return _inner.Deserialize(reader, expectedType, nestedObjectDeserializer, out value, rootDeserializer);
+        }
 
         var instance = Activator.CreateInstance(expectedType)
             ?? throw new InvalidOperationException($"Cannot create instance of {expectedType}. Add a parameterless constructor.");
@@ -46,7 +65,9 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         while (!reader.Accept<MappingEnd>(out _))
         {
             if (!reader.TryConsume<Scalar>(out var keyScalar))
-                throw new YamlException(mapStart.Start, reader.Current.Start, "Only scalar mapping keys are supported.");
+            {
+                throw new YamlException(mapStart.Start, mapStart.End, "Only scalar mapping keys are supported.");
+            }
 
             var key = keyScalar.Value ?? string.Empty;
 
@@ -71,14 +92,22 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
     {
         foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
-            if (property.GetCustomAttribute<JsonExtensionDataAttribute>() is null) continue;
+            if (property.GetCustomAttribute<JsonExtensionDataAttribute>() is null)
+            {
+                continue;
+            }
 
             var kv = GetIdictionaryKVTypes(property.PropertyType);
-            if (kv is null) continue;
+            if (kv is null)
+            {
+                continue;
+            }
 
             var (keyT, valT) = kv.Value;
             if (keyT == typeof(string) && (valT == typeof(object) || valT == typeof(JsonElement)))
+            {
                 return property;
+            }
         }
         return null;
     }
@@ -107,7 +136,10 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
     private sealed class ExtensionBag
     {
         public Action<string, object?> Put { get; }
-        public ExtensionBag(Action<string, object?> put) { Put = put; }
+        public ExtensionBag(Action<string, object?> put)
+        {
+            Put = put;
+        }
     }
 
     private static ExtensionBag GetOrCreateExtBag(object target, PropertyInfo prop)
@@ -143,8 +175,10 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
     private static IDictionary<string, object> CreateDictObject(Type propertyType)
     {
         if (!propertyType.IsInterface && !propertyType.IsAbstract)
+        {
             return (IDictionary<string, object>)(Activator.CreateInstance(propertyType)
                     ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase));
+        }
 
         return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
     }
@@ -152,15 +186,20 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
     private static IDictionary<string, JsonElement> CreateDictJsonElement(Type propertyType)
     {
         if (!propertyType.IsInterface && !propertyType.IsAbstract)
+        {
             return (IDictionary<string, JsonElement>)(Activator.CreateInstance(propertyType)
                     ?? new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase));
+        }
 
         return new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
     }
 
     private static JsonElement ToJsonElement(object? value)
     {
-        if (value is JsonElement je) return je.Clone();
+        if (value is JsonElement je)
+        {
+            return je.Clone();
+        }
 
         // serialize just this subtree to produce a JsonElement
         // handles nulls, scalars, sequences, and mappings
@@ -173,12 +212,21 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
 
         foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
-            if (!property.CanWrite) continue;
+            if (!property.CanWrite)
+            {
+                continue;
+            }
 
-            if (property.GetCustomAttribute<JsonExtensionDataAttribute>() != null) continue;
+            if (property.GetCustomAttribute<JsonExtensionDataAttribute>() != null)
+            {
+                continue;
+            }
 
             var alias = property.GetCustomAttribute<YamlMemberAttribute>()?.Alias;
-            if (!string.IsNullOrWhiteSpace(alias)) dict[alias!] = property;
+            if (!string.IsNullOrWhiteSpace(alias))
+            {
+                dict[alias!] = property;
+            }
 
             dict[property.Name] = property;
         }

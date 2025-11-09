@@ -27,6 +27,18 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         this.ignoreOrder = ignoreOrder;
     }
 
+    /// <summary>
+    /// Returns the name of the enum member in the specified type that is associated with the given JSON string value,
+    /// if such a mapping exists.
+    /// </summary>
+    /// <remarks>If no enum member in <paramref name="enumType"/> is decorated with a matching
+    /// <see cref="JsonStringEnumMemberNameAttribute" />, the method delegates to the underlying type descriptor to resolve the
+    /// name. This method is useful when working with enums that use custom string representations for JSON
+    /// serialization.</remarks>
+    /// <param name="enumType">The type of the enumeration to search for a member name. Must be a valid enum type.</param>
+    /// <param name="name">The JSON string value to match against the enum member's custom name attribute.</param>
+    /// <returns>The name of the enum member that corresponds to the specified JSON string value, or the result from the
+    /// underlying type descriptor if no match is found.</returns>
     public string GetEnumName(Type enumType, string name)
     {
         foreach (var mi in enumType.GetMembers(BindingFlags.Public | BindingFlags.Static))
@@ -41,6 +53,17 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         return innerTypeDescriptor.GetEnumName(enumType, name);
     }
 
+    /// <summary>
+    /// Returns the string representation of the specified enum value, using a custom name if defined by a
+    /// <see cref="JsonStringEnumMemberNameAttribute" />.
+    /// </summary>
+    /// <remarks>If the enum member is decorated with a <see cref="JsonStringEnumMemberNameAttribute" />, its Name property
+    /// is used as the string representation. If no such attribute is found, the method falls back to the default
+    /// behavior provided by innerTypeDescriptor. This method does not perform validation on the type of enumValue;
+    /// callers should ensure that enumValue is a valid enum member.</remarks>
+    /// <param name="enumValue">The enum value for which to retrieve the string representation. Must be a valid member of an enumeration type.</param>
+    /// <returns>A string containing the custom name defined by <see cref="JsonStringEnumMemberNameAttribute" /> if present; otherwise, the
+    /// default string representation of the enum value.</returns>
     public string GetEnumValue(object enumValue)
     {
         var type = enumValue.GetType();
@@ -64,6 +87,20 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         return innerTypeDescriptor.GetEnumValue(enumValue);
     }
 
+    /// <summary>
+    /// Returns a collection of property descriptors for the specified type, including declared properties and any
+    /// extension data properties present in the container.
+    /// </summary>
+    /// <remarks>Properties marked with <see cref="JsonIgnoreAttribute"/> and a condition of <see
+    /// cref="JsonIgnoreCondition.Always"/> are excluded from the result. Properties with <see
+    /// cref="JsonExtensionDataAttribute"/> are expanded to include each extension data entry as a separate property
+    /// descriptor. The order of returned properties may be affected by <see cref="JsonPropertyOrderAttribute"/> unless
+    /// ordering is ignored.</remarks>
+    /// <param name="type">The type whose properties are to be described. Must not be null.</param>
+    /// <param name="container">An optional object instance that may contain extension data properties. If null, only declared properties are
+    /// processed.</param>
+    /// <returns>An enumerable collection of <see cref="IPropertyDescriptor"/> objects representing the properties of the
+    /// specified type. The collection may include extension data properties if present in the container.</returns>
     public IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container)
     {
         // First, process declared properties as before.
@@ -141,6 +178,24 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         return declaredProperties.OrderBy(p => p.Order);
     }
 
+    /// <summary>
+    /// Retrieves the property descriptor for the specified property name from the given type and container, with
+    /// options for case-insensitive matching and handling unmatched properties.
+    /// </summary>
+    /// <remarks>If the type contains a property marked with <see cref="JsonExtensionDataAttribute"/> and no
+    /// direct match is found, that property will be returned to support arbitrary property assignment.</remarks>
+    /// <param name="type">The type that contains the property to retrieve.</param>
+    /// <param name="container">An optional instance of the object that may influence property resolution. Can be null if not required.</param>
+    /// <param name="name">The name of the property to locate. Matching can be case-sensitive or case-insensitive based on the specified
+    /// option.</param>
+    /// <param name="ignoreUnmatched">If set to <see langword="true"/>, the method returns null when no matching property is found; otherwise, an
+    /// exception is thrown.</param>
+    /// <param name="caseInsensitivePropertyMatching">If set to <see langword="true"/>, property name matching is performed without regard to case; otherwise,
+    /// matching is case-sensitive.</param>
+    /// <returns>An <see cref="IPropertyDescriptor"/> representing the matched property, or null if no match is found and
+    /// <paramref name="ignoreUnmatched"/> is <see langword="true"/>.</returns>
+    /// <exception cref="SerializationException">Thrown if no matching property is found and <paramref name="ignoreUnmatched"/> is <see langword="false"/>, or if
+    /// multiple properties match the specified name.</exception>
     public IPropertyDescriptor GetProperty(Type type, object? container, string name, bool ignoreUnmatched, bool caseInsensitivePropertyMatching)
     {
         IEnumerable<IPropertyDescriptor> candidates;
@@ -188,27 +243,26 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     }
 }
 
-public class ExtensionDataPropertyDescriptor : IPropertyDescriptor
+internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
 {
-    private readonly string name;
-    private readonly object? value;
+    private readonly string _name;
+    private readonly object? _value;
 
-    // Use a high order so extension data comes after defined properties.
     public ExtensionDataPropertyDescriptor(string name, object? value)
     {
-        this.name = name;
-        this.value = value;
+        _name = name;
+        _value = value;
         Order = int.MaxValue;
         ScalarStyle = ScalarStyle.Any;
     }
 
     public string Name
     {
-        get => name;
+        get => _name;
         set => throw new NotSupportedException("The Name property is read-only and cannot be set.");
     }
 
-    public Type Type => value?.GetType() ?? typeof(object);
+    public Type Type => _value?.GetType() ?? typeof(object);
 
     public int Order { get; set; }
 
@@ -231,8 +285,8 @@ public class ExtensionDataPropertyDescriptor : IPropertyDescriptor
 
     public IObjectDescriptor Read(object target)
     {
-        return new ObjectDescriptor(value, Type, Type);
+        return new ObjectDescriptor(_value, Type, Type);
     }
 
-    public void Write(object target, object value) => throw new NotSupportedException("Writing extension data properties is not supported.");
+    public void Write(object target, object? value) => throw new NotSupportedException("Writing extension data properties is not supported.");
 }

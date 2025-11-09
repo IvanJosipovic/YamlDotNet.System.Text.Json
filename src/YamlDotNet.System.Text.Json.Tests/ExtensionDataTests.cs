@@ -40,7 +40,7 @@ public class ExtensionDataTests
 
         var yaml = YamlConverter.Serialize(model);
 
-        string expected = """
+        var expected = """
                           test: test-value
 
                           """;
@@ -60,7 +60,7 @@ public class ExtensionDataTests
 
         var yaml = YamlConverter.Serialize(model);
 
-        string expected = """
+        var expected = """
                           test: test-value
 
                           """;
@@ -84,7 +84,7 @@ public class ExtensionDataTests
 
         var yaml = YamlConverter.Serialize(model);
 
-        string expected = """
+        var expected = """
                           before: test1
                           after: test2
                           test: test-value
@@ -103,7 +103,7 @@ public class ExtensionDataTests
 
         var model = YamlConverter.Deserialize<TestJsonExtensionDataModel>(yaml);
 
-        model.ExtensionData.Count.ShouldBe(1);
+        model.ExtensionData!.Count.ShouldBe(1);
         model.ExtensionData["test"].GetString().ShouldBe("test-value");
     }
 
@@ -117,7 +117,7 @@ public class ExtensionDataTests
 
         var model = YamlConverter.Deserialize<TestJsonExtensionDataModelObject>(yaml);
 
-        model.ExtensionData.Count.ShouldBe(1);
+        model.ExtensionData!.Count.ShouldBe(1);
         model.ExtensionData["test"].ShouldBe("test-value");
     }
 
@@ -136,7 +136,7 @@ public class ExtensionDataTests
         model.before.ShouldBe("test1");
         model.after.ShouldBe("test2");
 
-        model.ExtensionData.Count.ShouldBe(1);
+        model.ExtensionData!.Count.ShouldBe(1);
         model.ExtensionData["test"].GetString().ShouldBe("test-value");
     }
 }
