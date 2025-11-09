@@ -47,7 +47,7 @@ public class EnumTests
                           - val2
 
                           """;
-        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
+        yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 
     [Fact]

@@ -18,7 +18,7 @@ public class Json2YamlTests
                           Temperature: '25'
 
                           """;
-        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
+        yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class Json2YamlTests
                           b: '2'
 
                           """;
-        yaml.ReplaceLineEndings("\n").ShouldBe(expected.ReplaceLineEndings("\n"));
+        yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 
 }
