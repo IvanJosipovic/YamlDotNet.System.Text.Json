@@ -1,8 +1,9 @@
-using System.Reflection;
+using System.Collections;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
+using YamlDotNet.Helpers;
 using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json;
@@ -14,13 +15,19 @@ namespace YamlDotNet.System.Text.Json;
 public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeserializer
 {
     private readonly INodeDeserializer _inner;
+    private readonly ITypeInspector _typeInspector;
 
     /// <summary>
     /// Initializes a new instance of the SystemTextJsonExtensionDataNodeDeserializer class using the specified inner
     /// node deserializer.
     /// </summary>
     /// <param name="inner">The inner node deserializer to use for delegating deserialization operations. Cannot be null.</param>
-    public SystemTextJsonExtensionDataNodeDeserializer(INodeDeserializer inner) => _inner = inner;
+    /// <param name="typeInspector">The ITypeInspector. Cannot be null.</param>
+    public SystemTextJsonExtensionDataNodeDeserializer(INodeDeserializer inner, ITypeInspector typeInspector)
+    {
+        _inner = inner;
+        _typeInspector = typeInspector;
+    }
 
     /// <summary>
     /// Deserializes a YAML mapping into an object of the specified type, populating known properties and storing
@@ -45,8 +52,9 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         out object? value,
         ObjectDeserializer rootDeserializer)
     {
-        var extProp = FindExtensionDictProperty(expectedType);
-        if (extProp is null)
+        var extenstionDataProperty = _typeInspector.GetProperties(expectedType, null).FirstOrDefault(x => x.GetCustomAttribute<JsonExtensionDataAttribute>() != null);
+
+        if (extenstionDataProperty is null)
         {
             return _inner.Deserialize(reader, expectedType, nestedObjectDeserializer, out value, rootDeserializer);
         }
@@ -56,60 +64,44 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
             return _inner.Deserialize(reader, expectedType, nestedObjectDeserializer, out value, rootDeserializer);
         }
 
-        var instance = Activator.CreateInstance(expectedType)
-            ?? throw new InvalidOperationException($"Cannot create instance of {expectedType}. Add a parameterless constructor.");
+        var implementationType = Nullable.GetUnderlyingType(expectedType)
+            ?? FsharpHelper.GetOptionUnderlyingType(expectedType)
+            ?? expectedType;
 
-        var known = GetWritableProps(expectedType);
-        var bag = GetOrCreateExtBag(instance, extProp);
+        var instance = Activator.CreateInstance(implementationType)
+            ?? throw new InvalidOperationException($"Cannot create instance of {implementationType}. Add a parameterless constructor.");
+
+        var (extensionDict, extenstionType) = GetOrCreateExtBag(instance, extenstionDataProperty);
 
         while (!reader.Accept<MappingEnd>(out _))
         {
-            if (!reader.TryConsume<Scalar>(out var keyScalar))
+            if (!reader.TryConsume<Scalar>(out var propertyName))
             {
                 throw new YamlException(mapStart.Start, mapStart.End, "Only scalar mapping keys are supported.");
             }
 
-            var key = keyScalar.Value ?? string.Empty;
+            var property = _typeInspector.GetProperty(implementationType, null, propertyName.Value, true, false);
 
-            if (known.TryGetValue(key, out var pd))
+            if (property != null)
             {
-                var v = nestedObjectDeserializer(reader, pd.PropertyType);
-                pd.SetValue(instance, v);
+                var v = nestedObjectDeserializer(reader, property.Type);
+                property.Write(instance, v);
             }
             else
             {
                 var v = nestedObjectDeserializer(reader, typeof(object));
-                bag.Put(key, v);
+
+                if (extenstionType == typeof(JsonElement))
+                {
+                    v = JsonSerializer.SerializeToElement(v);
+                }
+                extensionDict.Add(propertyName.Value, v);
             }
         }
 
         reader.Consume<MappingEnd>();
         value = instance;
         return true;
-    }
-
-    private static PropertyInfo? FindExtensionDictProperty(Type type)
-    {
-        foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
-        {
-            if (property.GetCustomAttribute<JsonExtensionDataAttribute>() is null)
-            {
-                continue;
-            }
-
-            var kv = GetIdictionaryKVTypes(property.PropertyType);
-            if (kv is null)
-            {
-                continue;
-            }
-
-            var (keyT, valT) = kv.Value;
-            if (keyT == typeof(string) && (valT == typeof(object) || valT == typeof(JsonElement)))
-            {
-                return property;
-            }
-        }
-        return null;
     }
 
     private static (Type key, Type val)? GetIdictionaryKVTypes(Type t)
@@ -133,40 +125,29 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         return null;
     }
 
-    private sealed class ExtensionBag
+    private static (IDictionary, Type) GetOrCreateExtBag(object target, IPropertyDescriptor prop)
     {
-        public Action<string, object?> Put { get; }
-        public ExtensionBag(Action<string, object?> put)
-        {
-            Put = put;
-        }
-    }
-
-    private static ExtensionBag GetOrCreateExtBag(object target, PropertyInfo prop)
-    {
-        var (key, val) = GetIdictionaryKVTypes(prop.PropertyType)
+        var (_, val) = GetIdictionaryKVTypes(prop.Type)
                  ?? throw new InvalidOperationException("ExtensionData must be an IDictionary<TKey, TValue>.");
 
-        var valT = val;
-
-        if (valT == typeof(object))
+        if (val == typeof(object))
         {
-            if (prop.GetValue(target) is not IDictionary<string, object> dict)
+            if (prop.Read(target).Value is not IDictionary<string, object> dict)
             {
-                dict = CreateDictObject(prop.PropertyType);
-                prop.SetValue(target, dict);
+                dict = CreateDictObject(prop.Type);
+                prop.Write(target, dict);
             }
-            return new ExtensionBag((k, v) => dict[k] = v!);
+            return ((IDictionary)dict, val);
         }
 
-        if (valT == typeof(JsonElement))
+        if (val == typeof(JsonElement))
         {
-            if (prop.GetValue(target) is not IDictionary<string, JsonElement> dict)
+            if (prop.Read(target).Value is not IDictionary<string, JsonElement> dict)
             {
-                dict = CreateDictJsonElement(prop.PropertyType);
-                prop.SetValue(target, dict);
+                dict = CreateDictJsonElement(prop.Type);
+                prop.Write(target, dict);
             }
-            return new ExtensionBag((k, v) => dict[k] = ToJsonElement(v));
+            return ((IDictionary)dict, val);
         }
 
         throw new InvalidOperationException("Only Dictionary<string, object> or Dictionary<string, JsonElement> are supported for ExtensionData.");
@@ -192,46 +173,5 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         }
 
         return new Dictionary<string, JsonElement>();
-    }
-
-    private static JsonElement ToJsonElement(object? value)
-    {
-        if (value is JsonElement je)
-        {
-            return je.Clone();
-        }
-
-        // serialize just this subtree to produce a JsonElement
-        // handles nulls, scalars, sequences, and mappings
-        return JsonSerializer.SerializeToElement(value, value?.GetType() ?? typeof(object));
-    }
-
-    private static Dictionary<string, PropertyInfo> GetWritableProps(Type type)
-    {
-        var dict = new Dictionary<string, PropertyInfo>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
-        {
-            if (!property.CanWrite)
-            {
-                continue;
-            }
-
-            if (property.GetCustomAttribute<JsonExtensionDataAttribute>() != null)
-            {
-                continue;
-            }
-
-            var name = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name;
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                dict[name!] = property;
-                continue;
-            }
-
-            dict[property.Name] = property;
-        }
-
-        return dict;
     }
 }
