@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json;
@@ -23,8 +22,8 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     /// <param name="ignoreOrder">ignores JsonPropertyOrder</param>
     public SystemTextJsonTypeInspector(ITypeInspector innerTypeDescriptor, bool ignoreOrder = false)
     {
-        this._innerTypeDescriptor = innerTypeDescriptor;
-        this._ignoreOrder = ignoreOrder;
+        _innerTypeDescriptor = innerTypeDescriptor;
+        _ignoreOrder = ignoreOrder;
     }
 
     /// <summary>
@@ -238,128 +237,3 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         return property;
     }
 }
-
-internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
-{
-    private readonly IPropertyDescriptor _baseDescriptor;
-
-    public ExtensionDataPropertyDescriptor(IPropertyDescriptor baseDescriptor)
-    {
-        _baseDescriptor = baseDescriptor;
-        Name = baseDescriptor.Name;
-    }
-
-    public bool AllowNulls { get; set; }
-
-    public string Name { get; set; }
-
-    public bool Required => false;
-
-    public Type Type => typeof(object);
-
-    public Type? TypeOverride { get; set; }
-
-    public Type? ConverterType { get; set; }
-
-    public int Order { get; set; }
-
-    public ScalarStyle ScalarStyle { get; set; }
-
-    public bool CanWrite { get; set; }
-
-    public void Write(object target, object? value)
-    {
-        var (dict, type) = SystemTextJsonExtensionDataNodeDeserializer.GetOrCreateExtensionDataDictionary(target, _baseDescriptor);
-
-        if (type == typeof(JsonElement))
-        {
-            dict[Name] = JsonSerializer.SerializeToElement(value);
-        }
-        else
-        {
-            dict[Name] = value;
-        }
-    }
-
-    public T? GetCustomAttribute<T>() where T : Attribute
-    {
-        return _baseDescriptor.GetCustomAttribute<T>();
-    }
-
-    public IObjectDescriptor Read(object target)
-    {
-        var (dict, _) = SystemTextJsonExtensionDataNodeDeserializer.GetOrCreateExtensionDataDictionary(target, _baseDescriptor);
-
-        var item = dict[Name];
-
-        return new ObjectDescriptor(item, item?.GetType() ?? typeof(object), item?.GetType() ?? typeof(object));
-    }
-}
-
-//internal sealed class KeyValuePairObjectDescriptor : IObjectDescriptor
-//{
-//    private readonly IDictionary _dictionary;
-//    private readonly object _key;
-
-//    public KeyValuePairObjectDescriptor(IDictionary dictionary, string key)
-//    {
-//        _dictionary = dictionary;
-//        _key = key;
-//    }
-
-//    public object? Value => _dictionary[_key];
-
-//    public Type Type => throw new NotImplementedException();
-
-//    public Type StaticType => throw new NotImplementedException();
-
-//    public ScalarStyle ScalarStyle => ScalarStyle.Any;
-//}
-
-//internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
-//{
-//    private readonly string _name;
-//    private readonly object? _value;
-
-//    public ExtensionDataPropertyDescriptor(string name, object? value)
-//    {
-//        _name = name;
-//        _value = value;
-//        Order = int.MaxValue;
-//        ScalarStyle = ScalarStyle.Any;
-//    }
-
-//    public string Name
-//    {
-//        get => _name;
-//        set => throw new NotSupportedException("The Name property is read-only and cannot be set.");
-//    }
-
-//    public Type Type => _value?.GetType() ?? typeof(object);
-
-//    public int Order { get; set; }
-
-//    public ScalarStyle ScalarStyle { get; set; }
-
-//    public bool CanWrite => false;
-
-//    public bool AllowNulls => true;
-
-//    public Type? TypeOverride { get; set; }
-
-//    public bool Required => false;
-
-//    public Type? ConverterType => null;
-
-//    public T? GetCustomAttribute<T>() where T : Attribute
-//    {
-//        return null;
-//    }
-
-//    public IObjectDescriptor Read(object target)
-//    {
-//        return new ObjectDescriptor(_value, Type, Type);
-//    }
-
-//    public void Write(object target, object? value) => throw new NotSupportedException("Writing extension data properties is not supported.");
-//}
