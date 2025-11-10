@@ -23,12 +23,14 @@ public static class BuilderExtensions
     /// <returns>The same <see cref="SerializerBuilder"/> instance, configured to use System.Text.Json for YAML serialization.</returns>
     public static SerializerBuilder AddSystemTextJson(this SerializerBuilder builder, bool sortAlphabetically = false, bool ignoreOrder = false)
     {
-#pragma warning disable CA1510 // Use ArgumentNullException throw helper
-        if (builder == null)
+#if NETSTANDARD2_0
+        if (builder is null)
         {
             throw new ArgumentNullException(nameof(builder));
         }
-#pragma warning restore CA1510 // Use ArgumentNullException throw helper
+#else
+        ArgumentNullException.ThrowIfNull(builder);
+#endif
         builder.WithTypeConverter(new SystemTextJsonYamlTypeConverter(sortAlphabetically));
         builder.WithTypeInspector(x => new SystemTextJsonTypeInspector(x, ignoreOrder));
 
@@ -44,12 +46,14 @@ public static class BuilderExtensions
     /// extension data handling.</returns>
     public static DeserializerBuilder AddSystemTextJson(this DeserializerBuilder builder)
     {
-#pragma warning disable CA1510 // Use ArgumentNullException throw helper
-        if (builder == null)
+#if NETSTANDARD2_0
+        if (builder is null)
         {
             throw new ArgumentNullException(nameof(builder));
         }
-#pragma warning restore CA1510 // Use ArgumentNullException throw helper
+#else
+        ArgumentNullException.ThrowIfNull(builder);
+#endif
         builder.WithTypeConverter(new SystemTextJsonYamlTypeConverter());
         builder.WithTypeInspector(x => new SystemTextJsonTypeInspector(x, true));
 

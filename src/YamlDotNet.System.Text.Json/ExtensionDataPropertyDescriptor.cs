@@ -61,7 +61,7 @@ internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
         return new ObjectDescriptor(item, item?.GetType() ?? typeof(object), item?.GetType() ?? typeof(object));
     }
 
-    private static (Type key, Type val)? GetIdictionaryKVTypes(Type t)
+    private static (Type key, Type val)? GetIDictionaryKVTypes(Type t)
     {
         // check the type itself
         if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IDictionary<,>))
@@ -84,7 +84,7 @@ internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
 
     private static (IDictionary, Type) GetOrCreateExtensionDataDictionary(object target, IPropertyDescriptor prop)
     {
-        var (_, val) = GetIdictionaryKVTypes(prop.Type)
+        var (_, val) = GetIDictionaryKVTypes(prop.Type)
                  ?? throw new InvalidOperationException("ExtensionData must be an IDictionary<TKey, TValue>.");
 
         if (val == typeof(object))
@@ -107,7 +107,7 @@ internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
             return ((IDictionary)dict, val);
         }
 
-        throw new InvalidOperationException("Only Dictionary<string, object> or Dictionary<string, JsonElement> are supported for ExtensionData.");
+        throw new InvalidOperationException($"Extension data property must be of type IDictionary<string, object> or IDictionary<string, JsonElement>. Found: {val.FullName}.");
     }
 
     private static IDictionary<string, object> CreateDictObject(Type propertyType)

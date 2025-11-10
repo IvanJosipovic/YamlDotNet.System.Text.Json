@@ -215,7 +215,9 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         using var enumerator = candidates.GetEnumerator();
         if (!enumerator.MoveNext())
         {
-            var jsonExtensionData = GetProperties(type, container).First(x => x.GetCustomAttribute<JsonExtensionDataAttribute>() != null);
+            var jsonExtensionData = GetProperties(type, container).FirstOrDefault(x => x.GetCustomAttribute<JsonExtensionDataAttribute>() != null)
+                ?? throw new SerializationException(
+                    $"No property with JsonExtensionDataAttribute found on type '{type.FullName}' when trying to match property name '{name}'.");
 
             var prop = new ExtensionDataPropertyDescriptor(jsonExtensionData)
             {

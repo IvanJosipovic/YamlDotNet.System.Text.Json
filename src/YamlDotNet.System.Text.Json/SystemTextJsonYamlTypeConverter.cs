@@ -282,9 +282,7 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
                 case JsonValueKind.String:
                     var valStr = val.ToString();
 
-#pragma warning disable CA1307 // Specify StringComparison for clarity
-                    if (valStr.IndexOf('\n') > 0)
-#pragma warning restore CA1307 // Specify StringComparison for clarity
+                    if (valStr.Contains('\n'))
                     {
                         // force it to be multi-line literal (aka |)
                         emitter.Emit(new Scalar(null, null, valStr, ScalarStyle.Literal, true, true));
