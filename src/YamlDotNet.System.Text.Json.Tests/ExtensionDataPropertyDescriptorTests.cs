@@ -1,9 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Text.Json;
-using Shouldly;
 using YamlDotNet.Core;
-using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 

@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Shouldly;
 using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests;
