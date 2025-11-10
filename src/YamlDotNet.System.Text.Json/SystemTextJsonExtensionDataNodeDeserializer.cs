@@ -177,10 +177,10 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         if (!propertyType.IsInterface && !propertyType.IsAbstract)
         {
             return (IDictionary<string, object>)(Activator.CreateInstance(propertyType)
-                    ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase));
+                    ?? new Dictionary<string, object>());
         }
 
-        return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        return new Dictionary<string, object>();
     }
 
     private static IDictionary<string, JsonElement> CreateDictJsonElement(Type propertyType)
@@ -188,10 +188,10 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         if (!propertyType.IsInterface && !propertyType.IsAbstract)
         {
             return (IDictionary<string, JsonElement>)(Activator.CreateInstance(propertyType)
-                    ?? new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase));
+                    ?? new Dictionary<string, JsonElement>());
         }
 
-        return new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
+        return new Dictionary<string, JsonElement>();
     }
 
     private static JsonElement ToJsonElement(object? value)
@@ -222,14 +222,16 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
                 continue;
             }
 
-            var alias = property.GetCustomAttribute<YamlMemberAttribute>()?.Alias;
-            if (!string.IsNullOrWhiteSpace(alias))
+            var name = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name;
+            if (!string.IsNullOrWhiteSpace(name))
             {
-                dict[alias!] = property;
+                dict[name!] = property;
+                continue;
             }
 
             dict[property.Name] = property;
         }
+
         return dict;
     }
 }

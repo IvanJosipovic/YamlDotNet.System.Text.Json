@@ -41,9 +41,9 @@ public class ExtensionDataTests
         var yaml = YamlConverter.Serialize(model);
 
         var expected = """
-                          test: test-value
+                       test: test-value
 
-                          """;
+                       """;
         yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 
@@ -61,9 +61,9 @@ public class ExtensionDataTests
         var yaml = YamlConverter.Serialize(model);
 
         var expected = """
-                          test: test-value
+                       test: test-value
 
-                          """;
+                       """;
         yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 
@@ -85,11 +85,11 @@ public class ExtensionDataTests
         var yaml = YamlConverter.Serialize(model);
 
         var expected = """
-                          before: test1
-                          after: test2
-                          test: test-value
+                       before: test1
+                       after: test2
+                       test: test-value
 
-                          """;
+                       """;
         yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
     }
 
@@ -97,9 +97,9 @@ public class ExtensionDataTests
     public void DeserializeExtensionData()
     {
         var yaml = """
-                    test: test-value
+                   test: test-value
 
-                    """;
+                   """;
 
         var model = YamlConverter.Deserialize<TestJsonExtensionDataModel>(yaml);
 
@@ -111,9 +111,9 @@ public class ExtensionDataTests
     public void DeserializeExtensionDataObject()
     {
         var yaml = """
-                    test: test-value
+                   test: test-value
 
-                    """;
+                   """;
 
         var model = YamlConverter.Deserialize<TestJsonExtensionDataModelObject>(yaml);
 
@@ -125,11 +125,11 @@ public class ExtensionDataTests
     public void DeserializeExtensionDataMixed()
     {
         var yaml = """
-                    before: test1
-                    after: test2
-                    test: test-value
+                   before: test1
+                   after: test2
+                   test: test-value
 
-                    """;
+                   """;
 
         var model = YamlConverter.Deserialize<TestJsonExtensionDataModelMixed>(yaml);
 
