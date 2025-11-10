@@ -71,7 +71,7 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         var instance = Activator.CreateInstance(implementationType)
             ?? throw new InvalidOperationException($"Cannot create instance of {implementationType}. Add a parameterless constructor.");
 
-        var (extensionDict, extenstionType) = GetOrCreateExtBag(instance, extenstionDataProperty);
+        var (extensionDict, extenstionType) = GetOrCreateExtensionDataDictionary(instance, extenstionDataProperty);
 
         while (!reader.Accept<MappingEnd>(out _))
         {
@@ -125,7 +125,20 @@ public sealed class SystemTextJsonExtensionDataNodeDeserializer : INodeDeseriali
         return null;
     }
 
-    private static (IDictionary, Type) GetOrCreateExtBag(object target, IPropertyDescriptor prop)
+    /// <summary>
+    /// Gets the extension data dictionary associated with the specified target object and property descriptor, or
+    /// creates and assigns a compatible dictionary if one does not exist.
+    /// </summary>
+    /// <remarks>Only dictionaries of type <see cref="Dictionary{TKey,TValue}"/> (with <c>TKey</c> as <see cref="string"/> and <c>TValue</c> as <see cref="object"/> or <see cref="JsonElement"/>) are supported for extension data. If the property does not contain a
+    /// compatible dictionary, a new instance will be created and assigned.</remarks>
+    /// <param name="target">The target object that contains the extension data property.</param>
+    /// <param name="prop">The property descriptor representing the extension data property. The property type must be a supported
+    /// dictionary type.</param>
+    /// <returns>A tuple containing the extension data dictionary as an <see cref="IDictionary"/> and the value type of the
+    /// dictionary. The dictionary will be created and assigned to the property if it does not already exist.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the property type is not a supported dictionary type, or if the dictionary value type is not <see
+    /// cref="object"/> or <see cref="JsonElement"/>.</exception>
+    public static (IDictionary, Type) GetOrCreateExtensionDataDictionary(object target, IPropertyDescriptor prop)
     {
         var (_, val) = GetIdictionaryKVTypes(prop.Type)
                  ?? throw new InvalidOperationException("ExtensionData must be an IDictionary<TKey, TValue>.");

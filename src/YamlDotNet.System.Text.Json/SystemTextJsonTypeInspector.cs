@@ -12,9 +12,9 @@ namespace YamlDotNet.System.Text.Json;
 /// </summary>
 public sealed class SystemTextJsonTypeInspector : ITypeInspector
 {
-    private readonly ITypeInspector innerTypeDescriptor;
+    private readonly ITypeInspector _innerTypeDescriptor;
 
-    private readonly bool ignoreOrder;
+    private readonly bool _ignoreOrder;
 
     /// <summary>
     /// Applies property settings from <see cref="JsonPropertyNameAttribute"/> and <see cref="JsonIgnoreAttribute"/> and <see cref="JsonStringEnumMemberNameAttribute"/> to YamlDotNet
@@ -23,8 +23,8 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     /// <param name="ignoreOrder">ignores JsonPropertyOrder</param>
     public SystemTextJsonTypeInspector(ITypeInspector innerTypeDescriptor, bool ignoreOrder = false)
     {
-        this.innerTypeDescriptor = innerTypeDescriptor;
-        this.ignoreOrder = ignoreOrder;
+        this._innerTypeDescriptor = innerTypeDescriptor;
+        this._ignoreOrder = ignoreOrder;
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
             }
         }
 
-        return innerTypeDescriptor.GetEnumName(enumType, name);
+        return _innerTypeDescriptor.GetEnumName(enumType, name);
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
             }
         }
 
-        return innerTypeDescriptor.GetEnumValue(enumValue);
+        return _innerTypeDescriptor.GetEnumValue(enumValue);
     }
 
     /// <summary>
@@ -104,7 +104,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     public IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container)
     {
         // First, process declared properties as before.
-        var declaredProperties = innerTypeDescriptor.GetProperties(type, container)
+        var declaredProperties = _innerTypeDescriptor.GetProperties(type, container)
             .Where(p =>
             {
                 var ignore = p.GetCustomAttribute<JsonIgnoreAttribute>();
@@ -116,32 +116,34 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
             {
                 if (p.GetCustomAttribute<JsonExtensionDataAttribute>() != null)
                 {
-                    var props = new List<IPropertyDescriptor>();
-
                     if (container == null)
                     {
-                        var descriptor = new PropertyDescriptor(p);
-                        return [descriptor];
+                        return [p];
                     }
-                    else
+
+                    var props = new List<IPropertyDescriptor>();
+
+                    if (p.Read(container).Value is IDictionary<string, JsonElement> extData)
                     {
-                        if (p.Read(container).Value is IDictionary<string, JsonElement> extData)
+                        foreach (var entry in extData)
                         {
-                            foreach (var entry in extData)
+                            // Create a property descriptor for each extension data key/value.
+                            var extProp = new ExtensionDataPropertyDescriptor(p)
                             {
-                                // Create a property descriptor for each extension data key/value.
-                                var extProp = new ExtensionDataPropertyDescriptor(entry.Key, entry.Value);
-                                props.Add(extProp);
-                            }
+                                Name = entry.Key,
+                            };
+                            props.Add(extProp);
                         }
-                        else if (p.Read(container).Value is IDictionary<string, object> extData2)
+                    }
+                    else if (p.Read(container).Value is IDictionary<string, object> extData2)
+                    {
+                        foreach (var entry in extData2)
                         {
-                            foreach (var entry in extData2)
+                            // Create a property descriptor for each extension data key/value.
+                            var extProp = new ExtensionDataPropertyDescriptor(p)
                             {
-                                // Create a property descriptor for each extension data key/value.
-                                var extProp = new ExtensionDataPropertyDescriptor(entry.Key, entry.Value);
-                                props.Add(extProp);
-                            }
+                                Name = entry.Key,
+                            }; props.Add(extProp);
                         }
                     }
 
@@ -157,7 +159,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
                         descriptor.Name = nameAttribute.Name;
                     }
 
-                    if (!ignoreOrder)
+                    if (!_ignoreOrder)
                     {
                         var orderAttribute = p.GetCustomAttribute<JsonPropertyOrderAttribute>();
                         if (orderAttribute != null)
@@ -171,10 +173,11 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
             });
 
         // Combine declared and extension properties.
-        if (ignoreOrder)
+        if (_ignoreOrder)
         {
             return declaredProperties;
         }
+
         return declaredProperties.OrderBy(p => p.Order);
     }
 
@@ -188,8 +191,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     /// <param name="container">An optional instance of the object that may influence property resolution. Can be null if not required.</param>
     /// <param name="name">The name of the property to locate. Matching can be case-sensitive or case-insensitive based on the specified
     /// option.</param>
-    /// <param name="ignoreUnmatched">If set to <see langword="true"/>, the method returns null when no matching property is found; otherwise, an
-    /// exception is thrown.</param>
+    /// <param name="ignoreUnmatched">Not used</param>
     /// <param name="caseInsensitivePropertyMatching">If set to <see langword="true"/>, property name matching is performed without regard to case; otherwise,
     /// matching is case-sensitive.</param>
     /// <returns>An <see cref="IPropertyDescriptor"/> representing the matched property, or null if no match is found and
@@ -214,20 +216,14 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         using var enumerator = candidates.GetEnumerator();
         if (!enumerator.MoveNext())
         {
-            if (ignoreUnmatched)
+            var jsonExtensionData = GetProperties(type, container).First(x => x.GetCustomAttribute<JsonExtensionDataAttribute>() != null);
+
+            var prop = new ExtensionDataPropertyDescriptor(jsonExtensionData)
             {
-                return null!;
-            }
+                Name = name,
+            };
 
-            var jsonExtensionData = GetProperties(type, container).FirstOrDefault(x => x.GetCustomAttribute<JsonExtensionDataAttribute>() != null);
-
-            if (jsonExtensionData != null)
-            {
-                // This means we need to support arbitrary properties
-                return jsonExtensionData;
-            }
-
-            throw new SerializationException($"Property '{name}' not found on type '{type.FullName}'.");
+            return prop;
         }
 
         var property = enumerator.Current;
@@ -235,7 +231,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         if (enumerator.MoveNext())
         {
             throw new SerializationException(
-                $"Multiple properties with the name/alias '{name}' already exists on type '{type.FullName}', maybe you're misusing YamlAlias or maybe you are using the wrong naming convention? The matching properties are: {string.Join(", ", candidates.Select(p => p.Name).ToArray())}"
+                $"Multiple properties with the name/alias '{name}' already exists on type '{type.FullName}', maybe you're misusing JsonPropertyName or maybe you are using the wrong naming convention? The matching properties are: {string.Join(", ", [.. candidates.Select(p => p.Name)])}"
             );
         }
 
@@ -245,48 +241,125 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
 
 internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
 {
-    private readonly string _name;
-    private readonly object? _value;
+    private readonly IPropertyDescriptor _baseDescriptor;
 
-    public ExtensionDataPropertyDescriptor(string name, object? value)
+    public ExtensionDataPropertyDescriptor(IPropertyDescriptor baseDescriptor)
     {
-        _name = name;
-        _value = value;
-        Order = int.MaxValue;
-        ScalarStyle = ScalarStyle.Any;
+        _baseDescriptor = baseDescriptor;
+        Name = baseDescriptor.Name;
     }
 
-    public string Name
-    {
-        get => _name;
-        set => throw new NotSupportedException("The Name property is read-only and cannot be set.");
-    }
+    public bool AllowNulls { get; set; }
 
-    public Type Type => _value?.GetType() ?? typeof(object);
+    public string Name { get; set; }
+
+    public bool Required => false;
+
+    public Type Type => typeof(object);
+
+    public Type? TypeOverride { get; set; }
+
+    public Type? ConverterType { get; set; }
 
     public int Order { get; set; }
 
     public ScalarStyle ScalarStyle { get; set; }
 
-    public bool CanWrite => false;
+    public bool CanWrite { get; set; }
 
-    public bool AllowNulls => true;
+    public void Write(object target, object? value)
+    {
+        var (dict, type) = SystemTextJsonExtensionDataNodeDeserializer.GetOrCreateExtensionDataDictionary(target, _baseDescriptor);
 
-    public Type? TypeOverride { get; set; }
-
-    public bool Required => false;
-
-    public Type? ConverterType => null;
+        if (type == typeof(JsonElement))
+        {
+            dict[Name] = JsonSerializer.SerializeToElement(value);
+        }
+        else
+        {
+            dict[Name] = value;
+        }
+    }
 
     public T? GetCustomAttribute<T>() where T : Attribute
     {
-        return null;
+        return _baseDescriptor.GetCustomAttribute<T>();
     }
 
     public IObjectDescriptor Read(object target)
     {
-        return new ObjectDescriptor(_value, Type, Type);
-    }
+        var (dict, _) = SystemTextJsonExtensionDataNodeDeserializer.GetOrCreateExtensionDataDictionary(target, _baseDescriptor);
 
-    public void Write(object target, object? value) => throw new NotSupportedException("Writing extension data properties is not supported.");
+        var item = dict[Name];
+
+        return new ObjectDescriptor(item, item?.GetType() ?? typeof(object), item?.GetType() ?? typeof(object));
+    }
 }
+
+//internal sealed class KeyValuePairObjectDescriptor : IObjectDescriptor
+//{
+//    private readonly IDictionary _dictionary;
+//    private readonly object _key;
+
+//    public KeyValuePairObjectDescriptor(IDictionary dictionary, string key)
+//    {
+//        _dictionary = dictionary;
+//        _key = key;
+//    }
+
+//    public object? Value => _dictionary[_key];
+
+//    public Type Type => throw new NotImplementedException();
+
+//    public Type StaticType => throw new NotImplementedException();
+
+//    public ScalarStyle ScalarStyle => ScalarStyle.Any;
+//}
+
+//internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
+//{
+//    private readonly string _name;
+//    private readonly object? _value;
+
+//    public ExtensionDataPropertyDescriptor(string name, object? value)
+//    {
+//        _name = name;
+//        _value = value;
+//        Order = int.MaxValue;
+//        ScalarStyle = ScalarStyle.Any;
+//    }
+
+//    public string Name
+//    {
+//        get => _name;
+//        set => throw new NotSupportedException("The Name property is read-only and cannot be set.");
+//    }
+
+//    public Type Type => _value?.GetType() ?? typeof(object);
+
+//    public int Order { get; set; }
+
+//    public ScalarStyle ScalarStyle { get; set; }
+
+//    public bool CanWrite => false;
+
+//    public bool AllowNulls => true;
+
+//    public Type? TypeOverride { get; set; }
+
+//    public bool Required => false;
+
+//    public Type? ConverterType => null;
+
+//    public T? GetCustomAttribute<T>() where T : Attribute
+//    {
+//        return null;
+//    }
+
+//    public IObjectDescriptor Read(object target)
+//    {
+//        return new ObjectDescriptor(_value, Type, Type);
+//    }
+
+//    public void Write(object target, object? value) => throw new NotSupportedException("Writing extension data properties is not supported.");
+//}

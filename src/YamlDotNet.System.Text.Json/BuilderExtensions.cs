@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NodeDeserializers;
+//using YamlDotNet.Serialization.NodeDeserializers;
 
 namespace YamlDotNet.System.Text.Json;
 
@@ -53,8 +53,8 @@ public static class BuilderExtensions
 #pragma warning restore CA1510 // Use ArgumentNullException throw helper
         builder.WithTypeConverter(new SystemTextJsonYamlTypeConverter());
         builder.WithTypeInspector(x => new SystemTextJsonTypeInspector(x, true));
-        builder.WithNodeDeserializer(inner => new SystemTextJsonExtensionDataNodeDeserializer(inner, builder.BuildTypeInspector()),
-            s => s.InsteadOf<ObjectNodeDeserializer>());
+        //builder.WithNodeDeserializer(inner => new SystemTextJsonExtensionDataNodeDeserializer(inner, builder.BuildTypeInspector()),
+        //    s => s.InsteadOf<ObjectNodeDeserializer>());
 
         return builder;
     }

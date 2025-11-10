@@ -86,8 +86,8 @@ public class ExtensionDataTests
 
         var expected = """
                        before: test1
-                       after: test2
                        test: test-value
+                       after: test2
 
                        """;
         yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
@@ -126,8 +126,8 @@ public class ExtensionDataTests
     {
         var yaml = """
                    before: test1
-                   after: test2
                    test: test-value
+                   after: test2
 
                    """;
 
