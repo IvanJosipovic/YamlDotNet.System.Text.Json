@@ -32,7 +32,8 @@
     <PackageReference Include="System.Text.Json" Version="9.0.*" />
   </ItemGroup>
 
-    <ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="YamlDotNet.System.Text.Json.Tests" />
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
