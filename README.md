@@ -27,6 +27,7 @@ Supported Objects:
   - Order - Sets the serialization order of the property.
 - [System.Text.Json.Serialization.JsonStringEnumMemberNameAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonstringenummembernameattribute)
   - Name - Sets the value for the Enum Member that is present in the JSON/YAML when serializing and deserializing.
+- [System.Text.Json.Serialization.JsonExtensionDataAttribute](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonextensiondataattribute)
 
 ## Installation
 
@@ -47,29 +48,25 @@ var yaml = YamlConverter.SerializeJson(someJson);
 var obj = YamlConverter.Deserialize<MyTypedObject>(yaml);
 ```
 
-## How to use manually
-
-### SystemTextJsonYamlTypeConverter
-This is a type converter for reading and writing System.Text.Json objects.
-
-``` .WithTypeConverter(new SystemTextJsonYamlTypeConverter())```
-
-### SystemTextJsonTypeInspector
-This is a type inspector for reading System.Text.Json Attributes
-
-``` .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))```
+## How to integrate with YamlDotNet
 
 Example:
 
 ```csharp
+using YamlDotNet.Serialization;
+using YamlDotNet.System.Text.Json;
+
 var serializer = new SerializerBuilder()
-            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
-            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
+            .AddSystemTextJson()
             .Build();
+
+var yaml = serializer.Serialize(obj);
+
 var deserializer = new DeserializerBuilder()
-            .WithTypeConverter(new SystemTextJsonYamlTypeConverter())
-            .WithTypeInspector(x => new SystemTextJsonTypeInspector(x))
+            .AddSystemTextJson()
             .Build();
+
+var myObject = deserializer.Deserialize<MyType>(yaml)
 ```
 
 ### Inspired By
