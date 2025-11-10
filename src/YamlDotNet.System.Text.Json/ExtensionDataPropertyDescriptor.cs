@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text.Json;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
@@ -34,7 +35,7 @@ internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
 
     public void Write(object target, object? value)
     {
-        var (dict, type) = SystemTextJsonExtensionDataNodeDeserializer.GetOrCreateExtensionDataDictionary(target, _baseDescriptor);
+        var (dict, type) = GetOrCreateExtensionDataDictionary(target, _baseDescriptor);
 
         if (type == typeof(JsonElement))
         {
@@ -53,10 +54,81 @@ internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
 
     public IObjectDescriptor Read(object target)
     {
-        var (dict, _) = SystemTextJsonExtensionDataNodeDeserializer.GetOrCreateExtensionDataDictionary(target, _baseDescriptor);
+        var (dict, _) = GetOrCreateExtensionDataDictionary(target, _baseDescriptor);
 
         var item = dict[Name];
 
         return new ObjectDescriptor(item, item?.GetType() ?? typeof(object), item?.GetType() ?? typeof(object));
+    }
+
+    private static (Type key, Type val)? GetIdictionaryKVTypes(Type t)
+    {
+        // check the type itself
+        if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+        {
+            var a = t.GetGenericArguments();
+            return (a[0], a[1]);
+        }
+
+        // check implemented interfaces
+        foreach (var i in t.GetInterfaces())
+        {
+            if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+            {
+                var a = i.GetGenericArguments();
+                return (a[0], a[1]);
+            }
+        }
+        return null;
+    }
+
+    private static (IDictionary, Type) GetOrCreateExtensionDataDictionary(object target, IPropertyDescriptor prop)
+    {
+        var (_, val) = GetIdictionaryKVTypes(prop.Type)
+                 ?? throw new InvalidOperationException("ExtensionData must be an IDictionary<TKey, TValue>.");
+
+        if (val == typeof(object))
+        {
+            if (prop.Read(target).Value is not IDictionary<string, object> dict)
+            {
+                dict = CreateDictObject(prop.Type);
+                prop.Write(target, dict);
+            }
+            return ((IDictionary)dict, val);
+        }
+
+        if (val == typeof(JsonElement))
+        {
+            if (prop.Read(target).Value is not IDictionary<string, JsonElement> dict)
+            {
+                dict = CreateDictJsonElement(prop.Type);
+                prop.Write(target, dict);
+            }
+            return ((IDictionary)dict, val);
+        }
+
+        throw new InvalidOperationException("Only Dictionary<string, object> or Dictionary<string, JsonElement> are supported for ExtensionData.");
+    }
+
+    private static IDictionary<string, object> CreateDictObject(Type propertyType)
+    {
+        if (!propertyType.IsInterface && !propertyType.IsAbstract)
+        {
+            return (IDictionary<string, object>)(Activator.CreateInstance(propertyType)
+                    ?? new Dictionary<string, object>());
+        }
+
+        return new Dictionary<string, object>();
+    }
+
+    private static IDictionary<string, JsonElement> CreateDictJsonElement(Type propertyType)
+    {
+        if (!propertyType.IsInterface && !propertyType.IsAbstract)
+        {
+            return (IDictionary<string, JsonElement>)(Activator.CreateInstance(propertyType)
+                    ?? new Dictionary<string, JsonElement>());
+        }
+
+        return new Dictionary<string, JsonElement>();
     }
 }
