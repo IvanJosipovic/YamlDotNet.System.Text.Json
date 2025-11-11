@@ -220,7 +220,7 @@ public class TypeConverterTests
                     
                     """;
 
-        Assert.Equal(yamlExpected, yamlOutput);
+        Assert.Equal(yamlExpected.ReplaceLineEndings(), yamlOutput.ReplaceLineEndings());
     }
 
     [Fact]
