@@ -99,5 +99,4 @@ public class ExtensionDataPropertyDescriptorTests
 
         Should.Throw<InvalidOperationException>(() => descriptor.Write(target, "value"));
     }
-
 }

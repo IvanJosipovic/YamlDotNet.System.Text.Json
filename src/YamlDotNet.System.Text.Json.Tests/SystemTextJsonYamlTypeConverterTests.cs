@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
-public class SystemTextJsonYamlTypeConverterCoverageTests
+public class SystemTextJsonYamlTypeConverterTests
 {
     private static readonly ObjectDeserializer RootDeserializer = _ => null;
     private static readonly ObjectSerializer StubSerializer = (_, _) => { };
