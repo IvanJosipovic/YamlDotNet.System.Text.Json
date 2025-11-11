@@ -1,6 +1,8 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using YamlDotNet.Core;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
@@ -174,5 +176,65 @@ public class TypeConverterTests
         var output = YamlConverter.Deserialize<JsonNode>(yaml);
 
         Assert.Equal(outputVal, output.ToJsonString(JsonSerializerOptions));
+    }
+
+    public class V1ObjectMeta
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = default!;
+    }
+
+    public class V1CustomResourceDefinition
+    {
+        [JsonPropertyName("apiVersion")]
+        public string ApiVersion { get; set; } = default!;
+
+        [JsonPropertyName("kind")]
+        public string Kind { get; set; } = default!;
+
+        [JsonPropertyName("metadata")]
+        public V1ObjectMeta Metadata { get; set; } = default!;
+    }
+
+    [Fact]
+    public void DeserializeUnmatched()
+    {
+        var yaml = """
+                    apiVersion: 1.2.3
+                    kind: CustomResourceDefinition
+                    metadata:
+                      name: Test
+                    annotations:
+                      test: value
+                    """;
+
+        var output = YamlConverter.Deserialize<V1CustomResourceDefinition>(yaml, true);
+
+        var yamlOutput = YamlConverter.Serialize(output);
+
+        var yamlExpected = """
+                    apiVersion: 1.2.3
+                    kind: CustomResourceDefinition
+                    metadata:
+                      name: Test
+                    
+                    """;
+
+        Assert.Equal(yamlExpected.ReplaceLineEndings(), yamlOutput.ReplaceLineEndings());
+    }
+
+    [Fact]
+    public void DeserializeUnmatchedException()
+    {
+        var yaml = """
+                    apiVersion: 1.2.3
+                    kind: CustomResourceDefinition
+                    metadata:
+                      name: Test
+                    annotations:
+                      test: value
+                    """;
+
+        Assert.Throws<YamlException>(() => YamlConverter.Deserialize<V1CustomResourceDefinition>(yaml));
     }
 }

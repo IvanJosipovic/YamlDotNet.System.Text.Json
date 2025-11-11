@@ -16,17 +16,22 @@ public static class YamlConverter
     private static ISerializer GetSerializer(bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
     {
         return new SerializerBuilder()
-            .DisableAliases()
             .ConfigureDefaultValuesHandling(defaultValuesHandling)
             .AddSystemTextJson(sortAlphabetically, ignoreOrder)
             .Build();
     }
 
-    private static IDeserializer GetDeserializer()
+    private static IDeserializer GetDeserializer(bool ignoreUnmatchedProperties = false)
     {
-        return new DeserializerBuilder()
-            .AddSystemTextJson()
-            .Build();
+        var builder = new DeserializerBuilder()
+            .AddSystemTextJson();
+
+        if (ignoreUnmatchedProperties)
+        {
+            builder.IgnoreUnmatchedProperties();
+        }
+
+        return builder.Build();
     }
 
     /// <summary>
@@ -68,10 +73,11 @@ public static class YamlConverter
     /// to be valid and compatible with the target type.</remarks>
     /// <typeparam name="T">The type of object to deserialize the YAML content into.</typeparam>
     /// <param name="yaml">The YAML string to deserialize. Cannot be null.</param>
+    /// <param name="ignoreUnmatchedProperties">Instructs the deserializer to ignore unmatched properties instead of throwing an exception.</param>
     /// <returns>An instance of type T populated with data from the YAML string.</returns>
-    public static T Deserialize<T>(string yaml)
+    public static T Deserialize<T>(string yaml, bool ignoreUnmatchedProperties = false)
     {
-        var deserializer = GetDeserializer();
+        var deserializer = GetDeserializer(ignoreUnmatchedProperties);
         return deserializer.Deserialize<T>(yaml);
     }
 }
