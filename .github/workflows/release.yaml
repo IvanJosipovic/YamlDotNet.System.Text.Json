@@ -68,7 +68,7 @@ jobs:
       run: dotnet pack -c Release -p:Version=${{ (steps.semantic.outputs.new_release_published && steps.semantic.outputs.new_release_version) || '0.0.1' }}
 
     - name: Upload NuGet Packages
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: NuGet Package
         path: src/**/*.nupkg
