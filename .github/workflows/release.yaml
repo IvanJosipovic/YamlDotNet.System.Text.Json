@@ -57,7 +57,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: Test Report
-      uses: dorny/test-reporter@v2
+      uses: dorny/test-reporter@v3
       if: success() || failure()
       with:
         name: Tests
