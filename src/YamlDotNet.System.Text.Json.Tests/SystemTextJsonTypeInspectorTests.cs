@@ -66,7 +66,7 @@ public class SystemTextJsonTypeInspectorTests
         Should.Throw<SerializationException>(() => inspector.GetProperty(typeof(object), null, "Duplicate", ignoreUnmatched: true, caseInsensitivePropertyMatching: false));
     }
 
-    private sealed class StubTypeInspector : TypeInspectorSkeleton
+    private sealed class StubTypeInspector : ITypeInspector
     {
         private readonly IReadOnlyList<IPropertyDescriptor> _properties;
 
@@ -75,15 +75,13 @@ public class SystemTextJsonTypeInspectorTests
             _properties = properties;
         }
 
-        public override string GetEnumName(Type enumType, string name) => name;
+        public string GetEnumName(Type enumType, string name) => name;
 
-        public override string GetEnumValue(object enumValue) => enumValue.ToString()!;
+        public string GetEnumValue(object enumValue) => enumValue.ToString()!;
 
-        public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container) => _properties;
+        public IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container) => _properties;
 
-#pragma warning disable IDE0060 // Remove unused parameter
-        public new IPropertyDescriptor GetProperty(Type type, object? container, string name, bool ignoreUnmatched, bool caseInsensitivePropertyMatching)
-#pragma warning restore IDE0060 // Remove unused parameter
+        public IPropertyDescriptor GetProperty(Type type, object? container, string name, bool ignoreUnmatched, bool caseInsensitivePropertyMatching)
         {
             if (caseInsensitivePropertyMatching)
             {
@@ -93,12 +91,12 @@ public class SystemTextJsonTypeInspectorTests
             return _properties.First(p => p.Name == name);
         }
 
-        public override bool HasParseMethod(Type type)
+        public bool HasParseMethod(Type type)
         {
             return false;
         }
 
-        public override object? Parse(string value, Type expectedType)
+        public object? Parse(string value, Type expectedType)
         {
             throw new NotImplementedException();
         }
