@@ -89,6 +89,16 @@ public class SystemTextJsonTypeInspectorTests
 
             return _properties.First(p => p.Name == name);
         }
+
+        public bool HasParseMethod(Type type)
+        {
+            return false;
+        }
+
+        public object? Parse(string value, Type expectedType)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     private sealed class ContainerWithExtensionData
