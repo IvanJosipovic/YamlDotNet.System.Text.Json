@@ -6,6 +6,7 @@ on:
 
 jobs:
   build-test:
+    name: Build & Test
     permissions:
       contents: read
     uses: IvanJosipovic/templates/.github/workflows/csharp-build-test.yaml@main
