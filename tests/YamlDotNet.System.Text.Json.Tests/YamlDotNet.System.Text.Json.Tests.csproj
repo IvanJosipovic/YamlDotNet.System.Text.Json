@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\YamlDotNet.System.Text.Json\YamlDotNet.System.Text.Json.csproj" />
+    <ProjectReference Include="..\..\src\YamlDotNet.System.Text.Json\YamlDotNet.System.Text.Json.csproj" />
   </ItemGroup>
 
 </Project>

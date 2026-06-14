@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".releaserc.json" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="tests/YamlDotNet.System.Text.Json.Tests/YamlDotNet.System.Text.Json.Tests.csproj" />
+  <Project Path="src/YamlDotNet.System.Text.Json/YamlDotNet.System.Text.Json.csproj" />
+</Solution>
