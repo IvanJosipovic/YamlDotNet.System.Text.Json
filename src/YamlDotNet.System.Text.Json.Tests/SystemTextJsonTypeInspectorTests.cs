@@ -2,6 +2,7 @@ using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.TypeInspectors;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
@@ -65,7 +66,7 @@ public class SystemTextJsonTypeInspectorTests
         Should.Throw<SerializationException>(() => inspector.GetProperty(typeof(object), null, "Duplicate", ignoreUnmatched: true, caseInsensitivePropertyMatching: false));
     }
 
-    private sealed class StubTypeInspector : ITypeInspector
+    private sealed class StubTypeInspector : TypeInspectorSkeleton
     {
         private readonly IReadOnlyList<IPropertyDescriptor> _properties;
 
@@ -74,13 +75,15 @@ public class SystemTextJsonTypeInspectorTests
             _properties = properties;
         }
 
-        public string GetEnumName(Type enumType, string name) => name;
+        public override string GetEnumName(Type enumType, string name) => name;
 
-        public string GetEnumValue(object enumValue) => enumValue.ToString()!;
+        public override string GetEnumValue(object enumValue) => enumValue.ToString()!;
 
-        public IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container) => _properties;
+        public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container) => _properties;
 
-        public IPropertyDescriptor GetProperty(Type type, object? container, string name, bool ignoreUnmatched, bool caseInsensitivePropertyMatching)
+#pragma warning disable IDE0060 // Remove unused parameter
+        public new IPropertyDescriptor GetProperty(Type type, object? container, string name, bool ignoreUnmatched, bool caseInsensitivePropertyMatching)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             if (caseInsensitivePropertyMatching)
             {
@@ -88,6 +91,16 @@ public class SystemTextJsonTypeInspectorTests
             }
 
             return _properties.First(p => p.Name == name);
+        }
+
+        public override bool HasParseMethod(Type type)
+        {
+            return false;
+        }
+
+        public override object? Parse(string value, Type expectedType)
+        {
+            throw new NotImplementedException();
         }
     }
 
