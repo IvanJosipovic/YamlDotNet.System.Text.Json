@@ -7,89 +7,48 @@ on:
       - 'main'
       - 'alpha'
       - 'beta'
-  pull_request:
-    types: [opened, reopened, synchronize]
-  merge_group:
-
-permissions:
-  id-token: write
-  contents: write
-  actions: write
-  checks: write
-  issues: write
-  packages: write
-  pull-requests: write
 
 jobs:
+  get-version:
+    permissions:
+      contents: write
+    uses: IvanJosipovic/templates/.github/workflows/create-release.yaml@main
+    with:
+      dry_run: true
+
   build-test:
-    name: Build & Test & Release
+    needs: get-version
+    permissions:
+      contents: read
+    uses: IvanJosipovic/templates/.github/workflows/csharp-build-test.yaml@main
+    with:
+      version: ${{ needs.get-version.outputs.new_release_version }}
+
+  create-release:
+    needs: build-test
+    permissions:
+      contents: write
+      actions: write
+      checks: write
+      issues: write
+      pull-requests: write
+    uses: IvanJosipovic/templates/.github/workflows/create-release.yaml@main
+    with:
+      dry_run: false
+
+  publish-nuget:
+    name: Publish NuGet
+    needs: create-release
+    if: needs.create-release.outputs.new_release_published == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v5
-      with:
-        global-json-file: global.json
-
-    - name: Semantic Release Dry Run
-      uses: cycjimmy/semantic-release-action@v6.0.0
-      id: semantic
-      with:
-        dry_run: true
-        extra_plugins: |
-          conventional-changelog-conventionalcommits
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: .NET Build
-      run: dotnet build -c Release -p:Version=${{ (steps.semantic.outputs.new_release_published && steps.semantic.outputs.new_release_version) || '0.0.1' }}
-
-    - name: .NET Test
-      run: dotnet test -c Release -- --report-xunit-trx --report-xunit-trx-filename test-results.trx --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
-
-    - name: Coverage
-      uses: codecov/codecov-action@v7
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: coverage.cobertura.xml
-        fail_ci_if_error: true
-
-    - name: Test Report
-      uses: dorny/test-reporter@v3
-      if: success() || failure()
-      with:
-        name: Tests
-        path: '**/TestResults/test-results.trx'
-        reporter: dotnet-trx
-
-    - name: .NET Pack
-      run: dotnet pack -c Release -p:Version=${{ (steps.semantic.outputs.new_release_published && steps.semantic.outputs.new_release_version) || '0.0.1' }}
-
-    - name: Upload NuGet Packages
-      uses: actions/upload-artifact@v7
-      with:
-        name: NuGet Package
-        path: src/**/*.nupkg
-
-    - name: Semantic Release
-      if: steps.semantic.outputs.new_release_published == 'true'
-      id: semantic_final
-      uses: cycjimmy/semantic-release-action@v6.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        extra_plugins: |
-          conventional-changelog-conventionalcommits
-
-    - name: NuGet login (OIDC → temp API key)
-      if: steps.semantic_final.outputs.new_release_published == 'true'
+    - name: NuGet login
       uses: NuGet/login@v1
       id: login
       with:
         user: IvanJosipovic
-
-    - name: .NET NuGet Push
-      if: steps.semantic_final.outputs.new_release_published == 'true'
-      run: dotnet nuget push src/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{steps.login.outputs.NUGET_API_KEY}}
+    - uses: IvanJosipovic/templates/.github/actions/csharp-publish-nuget@main
+      env:
+        NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
