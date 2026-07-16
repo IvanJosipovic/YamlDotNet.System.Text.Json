@@ -10,6 +10,8 @@
     "config:recommended"
   ],
   "platformAutomerge": true,
+  "prConcurrentLimit": 0,
+  "prHourlyLimit": 0,
   "packageRules": [
     {
       "matchUpdateTypes": [
@@ -23,16 +25,29 @@
       ]
     },
     {
-      "automerge": true,
       "matchUpdateTypes": [
         "minor",
         "patch",
         "digest"
       ],
-      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "semanticCommitType": "fix",
       "matchFileNames": [
-        "src/YamlDotNet.System.Text.Json.Tests/YamlDotNet.System.Text.Json.Tests.csproj"
+        "src/**"
       ]
-    }
+    },
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "automerge": true,
+      "matchFileNames": [
+        ".github/workflows/**",
+        "tests/**",
+        "benchmarks/**"
+      ]
+    },
   ]
 }
