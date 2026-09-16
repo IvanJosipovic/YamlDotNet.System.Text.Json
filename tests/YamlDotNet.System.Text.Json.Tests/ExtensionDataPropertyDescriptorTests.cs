@@ -79,6 +79,30 @@ public class ExtensionDataPropertyDescriptorTests
     }
 
     [Fact]
+    public void WriteCreatesConcreteObjectDictionary()
+    {
+        var baseDescriptor = new TestPropertyDescriptor("ExtensionData", typeof(Dictionary<string, object>));
+        var descriptor = new ExtensionDataPropertyDescriptor(baseDescriptor);
+
+        descriptor.Write(new object(), 42);
+
+        var stored = (Dictionary<string, object>)baseDescriptor.Read(null).Value!;
+        stored["ExtensionData"].ShouldBe(42);
+    }
+
+    [Fact]
+    public void WriteCreatesConcreteJsonElementDictionary()
+    {
+        var baseDescriptor = new TestPropertyDescriptor("ExtensionData", typeof(Dictionary<string, JsonElement>));
+        var descriptor = new ExtensionDataPropertyDescriptor(baseDescriptor);
+
+        descriptor.Write(new object(), "payload");
+
+        var stored = (Dictionary<string, JsonElement>)baseDescriptor.Read(null).Value!;
+        stored["ExtensionData"].GetString().ShouldBe("payload");
+    }
+
+    [Fact]
     public void WriteThrowsForUnsupportedDictionaryValueType()
     {
         var baseDescriptor = new TestPropertyDescriptor("ExtensionData", typeof(Dictionary<string, int>));
