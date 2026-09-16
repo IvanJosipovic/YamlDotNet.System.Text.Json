@@ -66,13 +66,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     {
         // First, process declared properties as before.
         var declaredProperties = _innerTypeDescriptor.GetProperties(type, container)
-            .Where(p =>
-            {
-                var ignore = p.GetCustomAttribute<JsonIgnoreAttribute>();
-                return ignore == null ||
-                       ignore.Condition == JsonIgnoreCondition.Never ||
-                       ignore.Condition != JsonIgnoreCondition.Always;
-            })
+            .Where(p => ShouldIncludeProperty(p, container))
             .SelectMany(p =>
             {
                 if (p.GetCustomAttribute<JsonExtensionDataAttribute>() != null)
@@ -142,6 +136,33 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         return declaredProperties.OrderBy(p => p.Order);
     }
 
+    private static bool ShouldIncludeProperty(IPropertyDescriptor property, object? container)
+    {
+        var ignore = property.GetCustomAttribute<JsonIgnoreAttribute>();
+        if (ignore == null)
+        {
+            return true;
+        }
+
+        return ignore.Condition switch
+        {
+            JsonIgnoreCondition.Always => false,
+            JsonIgnoreCondition.Never => true,
+            JsonIgnoreCondition.WhenWritingNull => container == null || property.Read(container).Value is not null,
+            JsonIgnoreCondition.WhenWritingDefault => container == null || !IsDefaultValue(property, container),
+            JsonIgnoreCondition.WhenWriting => container == null,
+            JsonIgnoreCondition.WhenReading => container != null,
+            _ => throw new ArgumentOutOfRangeException(nameof(property), ignore.Condition, "Unsupported JsonIgnoreCondition value."),
+        };
+    }
+
+    private static bool IsDefaultValue(IPropertyDescriptor property, object container)
+    {
+        var value = property.Read(container).Value;
+        var valueType = Nullable.GetUnderlyingType(property.Type) ?? property.Type;
+        return value == null || valueType.IsValueType && value.Equals(Activator.CreateInstance(valueType));
+    }
+
     /// <inheritdoc />
     public IPropertyDescriptor GetProperty(Type type, object? container, string name, bool ignoreUnmatched, bool caseInsensitivePropertyMatching)
     {
@@ -161,6 +182,18 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         using var enumerator = candidates.GetEnumerator();
         if (!enumerator.MoveNext())
         {
+            var ignoredProperty = _innerTypeDescriptor.GetProperties(type, container)
+                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>()?.Condition is JsonIgnoreCondition.Always or JsonIgnoreCondition.WhenReading)
+                .Select(p => p.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? p.Name)
+                .FirstOrDefault(propertyName => caseInsensitivePropertyMatching
+                    ? propertyName.Equals(name, StringComparison.OrdinalIgnoreCase)
+                    : propertyName == name);
+
+            if (ignoredProperty != null)
+            {
+                return null!;
+            }
+
             var jsonExtensionData = GetProperties(type, container).FirstOrDefault(x => x.GetCustomAttribute<JsonExtensionDataAttribute>() != null);
 
             if (jsonExtensionData != null)

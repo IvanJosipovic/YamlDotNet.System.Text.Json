@@ -16,11 +16,15 @@ Supported Objects:
 - [System.Text.Json.JsonElement](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement)
 - [System.Text.Json.JsonDocument](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.jsondocument)
 - [System.Text.Json.Serialization.JsonIgnoreAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonignoreattribute)
-  - Conditions - condition that must be met before a property will be ignored
-    - Always             = Ignore (Default)
-    - Never              = Serialize
-    - WhenWritingNull    = Serialize
-    - WhenWritingDefault = Serialize
+  - Conditions - controls whether a property is included while serializing and deserializing
+    - Always             = Ignore during serialization and deserialization (default)
+    - Never              = Include during serialization and deserialization
+    - WhenWritingNull    = Ignore during serialization when the value is `null`
+    - WhenWritingDefault = Ignore during serialization when the value is the type's default value
+    - WhenWriting        = Ignore during serialization
+    - WhenReading        = Ignore during deserialization
+
+  Conditional `WhenWritingNull` and `WhenWritingDefault` properties remain readable during deserialization. Properties ignored with `Always` or `WhenReading` are treated as known ignored properties and skipped when they appear in YAML input.
 - [System.Text.Json.Serialization.JsonPropertyNameAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonpropertynameattribute)
   - Name - Specifies the property name that is present in the JSON/YAML when serializing and deserializing.
 - [System.Text.Json.Serialization.JsonPropertyOrderAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.text.json.serialization.jsonpropertyorderattribute)
