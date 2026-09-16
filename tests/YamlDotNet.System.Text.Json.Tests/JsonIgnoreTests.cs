@@ -87,6 +87,7 @@ public partial class JsonIgnoreTests
                           ShowWhenNotNull: ShowWhenNotNull
                           ShowWhenNotDefault: 42
                           ShowWhenEmpty: []
+                          HideNullableWhenDefault: 0
 
                           """;
         yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
@@ -123,7 +124,7 @@ public partial class JsonIgnoreTests
         yaml.ShouldNotContain("HideWhenDefault");
         yaml.ShouldContain("ShowWhenNotDefault: 42");
         yaml.ShouldContain("ShowWhenEmpty: []");
-        yaml.ShouldNotContain("HideNullableWhenDefault");
+        yaml.ShouldContain("HideNullableWhenDefault: 0");
     }
 
     [Fact]

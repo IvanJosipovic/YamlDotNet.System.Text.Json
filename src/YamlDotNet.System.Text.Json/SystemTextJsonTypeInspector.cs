@@ -159,8 +159,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     private static bool IsDefaultValue(IPropertyDescriptor property, object container)
     {
         var value = property.Read(container).Value;
-        var valueType = Nullable.GetUnderlyingType(property.Type) ?? property.Type;
-        return value == null || valueType.IsValueType && value.Equals(Activator.CreateInstance(valueType));
+        return value == null || property.Type.IsValueType && value.Equals(Activator.CreateInstance(property.Type));
     }
 
     /// <inheritdoc />
