@@ -108,6 +108,25 @@ public class ExtensionDataTests
     }
 
     [Fact]
+    public void DeserializeNestedExtensionData()
+    {
+        var yaml = """
+                   nested:
+                     test: test-value
+                     values:
+                       - one
+                       - two
+
+                   """;
+
+        var model = YamlConverter.Deserialize<TestJsonExtensionDataModel>(yaml);
+        var nested = model.ExtensionData!["nested"];
+
+        nested.GetProperty("test").GetString().ShouldBe("test-value");
+        nested.GetProperty("values")[1].GetString().ShouldBe("two");
+    }
+
+    [Fact]
     public void DeserializeExtensionDataObject()
     {
         var yaml = """

@@ -1,4 +1,6 @@
 
+using System.Text.Json;
+
 namespace YamlDotNet.System.Text.Json.Tests;
 
 public class Json2YamlTests
@@ -39,6 +41,19 @@ public class Json2YamlTests
 
                           """;
         yaml.ReplaceLineEndings().ShouldBe(expected.ReplaceLineEndings());
+    }
+
+    [Fact]
+    public void SerializeJson_UsesJsonDocumentParsingOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            AllowTrailingCommas = true,
+        };
+
+        var yaml = YamlConverter.SerializeJson("{\"value\":\"text\",}", options);
+
+        yaml.ShouldContain("value: text");
     }
 
 }

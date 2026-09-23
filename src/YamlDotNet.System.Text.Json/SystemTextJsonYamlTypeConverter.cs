@@ -159,15 +159,15 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
             {
                 if (parser.Accept<Scalar>(out var scalar))
                 {
-                    array.Add(ReadYaml(parser, typeof(JsonValue), rootDeserializer) as JsonValue);
+                    ((ICollection<JsonNode?>)array).Add(ReadYaml(parser, typeof(JsonValue), rootDeserializer) as JsonValue);
                 }
                 else if (parser.Accept<MappingStart>(out var mapStart))
                 {
-                    array.Add(ReadYaml(parser, typeof(JsonObject), rootDeserializer) as JsonObject);
+                    ((ICollection<JsonNode?>)array).Add(ReadYaml(parser, typeof(JsonObject), rootDeserializer) as JsonObject);
                 }
                 else if (parser.Accept<SequenceStart>(out var seqStart))
                 {
-                    array.Add(ReadYaml(parser, typeof(JsonArray), rootDeserializer) as JsonArray);
+                    ((ICollection<JsonNode?>)array).Add(ReadYaml(parser, typeof(JsonArray), rootDeserializer) as JsonArray);
                 }
             }
 
@@ -243,21 +243,21 @@ public sealed class SystemTextJsonYamlTypeConverter : IYamlTypeConverter
 
         if (readValue != null)
         {
-            return JsonSerializer.SerializeToDocument(readValue);
+            return JsonDocument.Parse(readValue.ToJsonString());
         }
 
         var readArray = ReadJsonArray(parser, rootDeserializer);
 
         if (readArray != null)
         {
-            return JsonSerializer.SerializeToDocument(readArray);
+            return JsonDocument.Parse(readArray.ToJsonString());
         }
 
         var readObject = ReadJsonObject(parser, rootDeserializer);
 
         if (readObject != null)
         {
-            return JsonSerializer.SerializeToDocument(readObject);
+            return JsonDocument.Parse(readObject.ToJsonString());
         }
 
         return null;

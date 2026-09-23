@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Diagnostics.CodeAnalysis;
 using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json;
@@ -21,6 +22,7 @@ public static class BuilderExtensions
     /// <param name="sortAlphabetically">Specifies whether object properties should be sorted alphabetically during serialization. Set to <see langword="true"/> to sort properties; otherwise, properties retain their original order.</param>
     /// <param name="ignoreOrder">Specifies whether <see cref="JsonPropertyOrderAttribute"/> should be ignored during type inspection. Set to <see langword="true"/> to ignore the attribute-defined order; otherwise, any order defined via <see cref="JsonPropertyOrderAttribute"/> is preserved.</param>
     /// <returns>The same <see cref="SerializerBuilder"/> instance, configured to use System.Text.Json for YAML serialization.</returns>
+    [RequiresUnreferencedCode("YamlDotNet's reflection based serializer is not trim safe. Use the StaticSerializerBuilder overload with a generated StaticContext.")]
     public static SerializerBuilder AddSystemTextJson(this SerializerBuilder builder, bool sortAlphabetically = false, bool ignoreOrder = false)
     {
 #if NETSTANDARD2_0
@@ -38,12 +40,35 @@ public static class BuilderExtensions
     }
 
     /// <summary>
+    /// Configures a static serializer builder to handle System.Text.Json types.
+    /// </summary>
+    /// <param name="builder">The static serializer builder to configure.</param>
+    /// <param name="sortAlphabetically">Whether to sort keys in JSON objects.</param>
+    /// <param name="ignoreOrder">Whether to ignore <see cref="JsonPropertyOrderAttribute"/> on POCO properties.</param>
+    /// <returns>The configured builder.</returns>
+    public static StaticSerializerBuilder AddSystemTextJson(this StaticSerializerBuilder builder, bool sortAlphabetically = false, bool ignoreOrder = false)
+    {
+#if NETSTANDARD2_0
+        if (builder is null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+#else
+        ArgumentNullException.ThrowIfNull(builder);
+#endif
+        builder.WithTypeConverter(new SystemTextJsonYamlTypeConverter(sortAlphabetically));
+        builder.WithTypeInspector(x => new SystemTextJsonTypeInspector(x, ignoreOrder));
+        return builder;
+    }
+
+    /// <summary>
     /// Configures the deserialization support for System.Text.Json types
     /// </summary>
     /// <remarks>This method enables deserialization support for System.Text.Json types</remarks>
     /// <param name="builder">The deserializer builder to configure with System.Text.Json support. Cannot be null.</param>
     /// <returns>The same <see cref="DeserializerBuilder"/> instance, configured to use System.Text.Json for type conversion and
     /// extension data handling.</returns>
+    [RequiresUnreferencedCode("YamlDotNet's reflection based deserializer is not trim safe. Use the StaticDeserializerBuilder overload with a generated StaticContext.")]
     public static DeserializerBuilder AddSystemTextJson(this DeserializerBuilder builder)
     {
 #if NETSTANDARD2_0
@@ -57,6 +82,26 @@ public static class BuilderExtensions
         builder.WithTypeConverter(new SystemTextJsonYamlTypeConverter());
         builder.WithTypeInspector(x => new SystemTextJsonTypeInspector(x, true));
 
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures a static deserializer builder to handle System.Text.Json types.
+    /// </summary>
+    /// <param name="builder">The static deserializer builder to configure.</param>
+    /// <returns>The configured builder.</returns>
+    public static StaticDeserializerBuilder AddSystemTextJson(this StaticDeserializerBuilder builder)
+    {
+#if NETSTANDARD2_0
+        if (builder is null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+#else
+        ArgumentNullException.ThrowIfNull(builder);
+#endif
+        builder.WithTypeConverter(new SystemTextJsonYamlTypeConverter());
+        builder.WithTypeInspector(x => new SystemTextJsonTypeInspector(x, true));
         return builder;
     }
 }

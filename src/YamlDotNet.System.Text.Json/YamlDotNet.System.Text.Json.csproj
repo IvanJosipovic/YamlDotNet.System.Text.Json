@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
@@ -18,6 +18,8 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsTrimmable Condition="'$(TargetFramework)' != 'netstandard2.0' and '$(IsCrossTargetingBuild)' != 'true'">true</IsTrimmable>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <TrimmerSingleWarn>false</TrimmerSingleWarn>
@@ -31,6 +33,14 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="System.Text.Json" Version="10.0.12" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="PolySharp" Version="1.16.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
+  </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="YamlDotNet.System.Text.Json.Tests" />
