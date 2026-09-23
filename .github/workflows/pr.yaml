@@ -24,5 +24,7 @@ jobs:
       with:
         global-json-file: global.json
 
-    - run: dotnet publish tests/YamlDotNet.System.Text.Json.Tests/YamlDotNet.System.Text.Json.Tests.csproj -c Aot -f net10.0 -r linux-x64 --self-contained true -o artifacts/aot-tests
+    # Restore outside the AOT configuration so the xUnit-required apphost pack is available to the AOT build.
+    - run: dotnet restore tests/YamlDotNet.System.Text.Json.Tests/YamlDotNet.System.Text.Json.Tests.csproj -r linux-x64
+    - run: dotnet publish tests/YamlDotNet.System.Text.Json.Tests/YamlDotNet.System.Text.Json.Tests.csproj -c Aot -f net10.0 -r linux-x64 --self-contained true --no-restore -o artifacts/aot-tests
     - run: ./artifacts/aot-tests/YamlDotNet.System.Text.Json.Tests
