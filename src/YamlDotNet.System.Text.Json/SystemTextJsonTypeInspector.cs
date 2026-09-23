@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -23,9 +24,12 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     }
 
     /// <inheritdoc />
+#if !NETSTANDARD2_0
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "ITypeInspector does not propagate enum Type member requirements. Trimmed callers must preserve public enum fields for JsonStringEnumMemberNameAttribute.")]
+#endif
     public string GetEnumName(Type enumType, string name)
     {
-        foreach (var mi in enumType.GetMembers(BindingFlags.Public | BindingFlags.Static))
+        foreach (var mi in enumType.GetFields(BindingFlags.Public | BindingFlags.Static))
         {
             var attr = mi.GetCustomAttribute<JsonStringEnumMemberNameAttribute>();
             if (attr != null && attr.Name.Equals(name, StringComparison.Ordinal))
@@ -38,11 +42,14 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     }
 
     /// <inheritdoc />
+#if !NETSTANDARD2_0
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "ITypeInspector receives runtime enum values without member requirements. Trimmed callers must preserve public enum fields for JsonStringEnumMemberNameAttribute.")]
+#endif
     public string GetEnumValue(object enumValue)
     {
         var type = enumValue.GetType();
 
-        foreach (var mi in type.GetMembers(BindingFlags.Public | BindingFlags.Static))
+        foreach (var mi in type.GetFields(BindingFlags.Public | BindingFlags.Static))
         {
             var value = Enum.Parse(type, mi.Name);
 
@@ -66,10 +73,10 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     {
         // First, process declared properties as before.
         var declaredProperties = _innerTypeDescriptor.GetProperties(type, container)
-            .Where(p => ShouldIncludeProperty(p, container))
+            .Where(p => ShouldIncludeProperty(type, p, container))
             .SelectMany(p =>
             {
-                if (p.GetCustomAttribute<JsonExtensionDataAttribute>() != null)
+                if (GetCustomAttribute<JsonExtensionDataAttribute>(type, p) != null)
                 {
                     if (container == null)
                     {
@@ -108,7 +115,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
                 {
                     var descriptor = new PropertyDescriptor(p);
 
-                    var nameAttribute = p.GetCustomAttribute<JsonPropertyNameAttribute>();
+                    var nameAttribute = GetCustomAttribute<JsonPropertyNameAttribute>(type, p);
                     if (nameAttribute != null)
                     {
                         descriptor.Name = nameAttribute.Name;
@@ -116,7 +123,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
 
                     if (!_ignoreOrder)
                     {
-                        var orderAttribute = p.GetCustomAttribute<JsonPropertyOrderAttribute>();
+                        var orderAttribute = GetCustomAttribute<JsonPropertyOrderAttribute>(type, p);
                         if (orderAttribute != null)
                         {
                             descriptor.Order = orderAttribute.Order;
@@ -136,9 +143,9 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         return declaredProperties.OrderBy(p => p.Order);
     }
 
-    private static bool ShouldIncludeProperty(IPropertyDescriptor property, object? container)
+    private static bool ShouldIncludeProperty(Type type, IPropertyDescriptor property, object? container)
     {
-        var ignore = property.GetCustomAttribute<JsonIgnoreAttribute>();
+        var ignore = GetCustomAttribute<JsonIgnoreAttribute>(type, property);
         if (ignore == null)
         {
             return true;
@@ -159,7 +166,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     private static bool IsDefaultValue(IPropertyDescriptor property, object container)
     {
         var value = property.Read(container).Value;
-        return value == null || property.Type.IsValueType && value.Equals(Activator.CreateInstance(property.Type));
+        return value == null || property.Type.IsValueType && value.Equals(Array.CreateInstance(property.Type, 1).GetValue(0));
     }
 
     /// <inheritdoc />
@@ -182,8 +189,8 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         if (!enumerator.MoveNext())
         {
             var ignoredProperty = _innerTypeDescriptor.GetProperties(type, container)
-                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>()?.Condition is JsonIgnoreCondition.Always or JsonIgnoreCondition.WhenReading)
-                .Select(p => p.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? p.Name)
+                .Where(p => GetCustomAttribute<JsonIgnoreAttribute>(type, p)?.Condition is JsonIgnoreCondition.Always or JsonIgnoreCondition.WhenReading)
+                .Select(p => GetCustomAttribute<JsonPropertyNameAttribute>(type, p)?.Name ?? p.Name)
                 .FirstOrDefault(propertyName => caseInsensitivePropertyMatching
                     ? propertyName.Equals(name, StringComparison.OrdinalIgnoreCase)
                     : propertyName == name);
@@ -193,7 +200,8 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
                 return null!;
             }
 
-            var jsonExtensionData = GetProperties(type, container).FirstOrDefault(x => x.GetCustomAttribute<JsonExtensionDataAttribute>() != null);
+            var jsonExtensionData = _innerTypeDescriptor.GetProperties(type, container)
+                .FirstOrDefault(x => GetCustomAttribute<JsonExtensionDataAttribute>(type, x) != null);
 
             if (jsonExtensionData != null)
             {
@@ -235,5 +243,16 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     public object? Parse(string value, Type expectedType)
     {
         throw new NotImplementedException();
+    }
+
+#if !NETSTANDARD2_0
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "StaticContext registrations root public DTO properties, but ITypeInspector cannot express that requirement on its Type parameter.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "StaticContext registrations root public DTO properties, but ITypeInspector cannot express that requirement on its Type parameter.")]
+#endif
+    private static TAttribute? GetCustomAttribute<TAttribute>(Type type, IPropertyDescriptor property)
+        where TAttribute : Attribute
+    {
+        return property.GetCustomAttribute<TAttribute>()
+            ?? type.GetProperty(property.Name, BindingFlags.Instance | BindingFlags.Public)?.GetCustomAttribute<TAttribute>();
     }
 }

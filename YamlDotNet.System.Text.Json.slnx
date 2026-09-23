@@ -5,5 +5,6 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="tests/YamlDotNet.System.Text.Json.Tests/YamlDotNet.System.Text.Json.Tests.csproj" />
+  <Project Path="samples/YamlDotNet.System.Text.Json.Samples.csproj" />
   <Project Path="src/YamlDotNet.System.Text.Json/YamlDotNet.System.Text.Json.csproj" />
 </Solution>

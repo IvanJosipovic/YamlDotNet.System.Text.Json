@@ -10,3 +10,19 @@ jobs:
     permissions:
       contents: read
     uses: IvanJosipovic/templates/.github/workflows/csharp-build-test.yaml@main
+
+  trimmed-consumer:
+    name: Samples and trimmed consumer smoke test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v6
+      with:
+        global-json-file: global.json
+
+    - run: dotnet publish samples/YamlDotNet.System.Text.Json.Samples.csproj -f net10.0 -r linux-x64 --self-contained true -p:PublishTrimmed=true -p:TrimMode=link -o artifacts/trimming-smoke
+    - run: ./artifacts/trimming-smoke/YamlDotNet.System.Text.Json.Samples
