@@ -97,6 +97,15 @@ public static class FixtureModels
             [JsonPropertyOrder(1)]
             public string MyProp3 { get; set; } = nameof(MyProp3);
         }
+
+        public sealed class FieldModel
+        {
+            public string UnannotatedField = "hidden";
+
+            [JsonInclude]
+            [JsonPropertyName("included-field")]
+            public string IncludedField = "included";
+        }
     }
 
     public static class IgnoreConditions
@@ -137,6 +146,9 @@ public static class FixtureModels
 
             [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
             public int? HideNullableWhenDefault { get; set; } = 0;
+
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+            public string? HideNullWhenDefault { get; set; }
         }
 
         public sealed class DirectionalModel

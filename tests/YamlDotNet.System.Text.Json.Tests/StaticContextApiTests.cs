@@ -6,6 +6,17 @@ namespace YamlDotNet.System.Text.Json.Tests;
 public class StaticContextApiTests
 {
     [Fact]
+    public void StaticContextOverloadsRejectNullContexts()
+    {
+        Should.Throw<ArgumentNullException>(() => YamlConverter.Serialize("value", null!))
+            .ParamName.ShouldBe("context");
+        Should.Throw<ArgumentNullException>(() => YamlConverter.SerializeJson("{}", (YamlDotNet.Serialization.StaticContext)null!))
+            .ParamName.ShouldBe("context");
+        Should.Throw<ArgumentNullException>(() => YamlConverter.Deserialize<string>("value", null!))
+            .ParamName.ShouldBe("context");
+    }
+
+    [Fact]
     public void SerializeJsonUsesSuppliedDocumentOptions()
     {
         var options = new JsonSerializerOptions

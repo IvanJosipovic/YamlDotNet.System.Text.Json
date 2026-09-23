@@ -100,6 +100,23 @@ public class SystemTextJsonTypeInspectorTests
     }
 
     [Fact]
+    public void GetPropertiesIncludesOnlyJsonIncludedFields()
+    {
+        var descriptors = new IPropertyDescriptor[]
+        {
+            new TestPropertyDescriptor(nameof(FixtureModels.ConfigurationAndAttributes.FieldModel.UnannotatedField), typeof(string)),
+            new TestPropertyDescriptor(nameof(FixtureModels.ConfigurationAndAttributes.FieldModel.IncludedField), typeof(string)),
+        };
+        var inspector = new SystemTextJsonTypeInspector(new StubTypeInspector(descriptors));
+
+        var properties = inspector.GetProperties(
+            typeof(FixtureModels.ConfigurationAndAttributes.FieldModel),
+            new FixtureModels.ConfigurationAndAttributes.FieldModel()).ToArray();
+
+        properties.Select(property => property.Name).ShouldBe(new[] { "included-field" });
+    }
+
+    [Fact]
     public void SerializerHandlesUnannotatedHiddenProperties()
     {
         var yaml = StaticYaml.Serialize(new FixtureModels.TypeInspectorInheritance.DerivedHiddenPropertyModel());

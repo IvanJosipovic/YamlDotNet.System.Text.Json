@@ -15,6 +15,7 @@ internal static class StaticYaml
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields, typeof(StaticApiProbeMode))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.ConfigurationAndAttributes.PropertyNameModel))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.ConfigurationAndAttributes.PropertyOrderModel))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.ConfigurationAndAttributes.FieldModel))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.IgnoreConditions.ConditionsModel))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.IgnoreConditions.DirectionalModel))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.Enums.EnumModel))]

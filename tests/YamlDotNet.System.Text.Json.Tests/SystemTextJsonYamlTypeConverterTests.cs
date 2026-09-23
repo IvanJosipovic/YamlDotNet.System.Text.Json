@@ -111,6 +111,10 @@ public class SystemTextJsonYamlTypeConverterTests
         var undefinedValue = (JsonValue)JsonValue.Create(default(JsonElement))!;
         converter.WriteYaml(emitter, undefinedValue, typeof(JsonValue), StubSerializer);
 
+        using var nullDocument = JsonDocument.Parse("null");
+        var jsonNullValue = JsonValue.Create(nullDocument.RootElement)!;
+        converter.WriteYaml(emitter, jsonNullValue, typeof(JsonValue), StubSerializer);
+
         emitter.Events.Count.ShouldBeGreaterThan(0);
     }
 

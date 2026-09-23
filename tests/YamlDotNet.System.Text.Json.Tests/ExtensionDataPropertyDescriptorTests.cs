@@ -127,6 +127,14 @@ public class ExtensionDataPropertyDescriptorTests
         Should.Throw<InvalidOperationException>(() => descriptor.Write(target, "value"));
     }
 
+    [Fact]
+    public void TypeDefaultsToObjectForNonDictionaryProperty()
+    {
+        var descriptor = new ExtensionDataPropertyDescriptor(new TestPropertyDescriptor("value", typeof(string)));
+
+        descriptor.Type.ShouldBe(typeof(object));
+    }
+
     [Theory]
     [MemberData(nameof(JsonScalarValues))]
     public void WriteConvertsSupportedJsonScalarsToJsonElement(object? value, string expectedJson)
