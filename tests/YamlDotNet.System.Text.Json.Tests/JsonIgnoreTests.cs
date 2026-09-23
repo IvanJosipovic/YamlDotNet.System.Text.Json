@@ -4,80 +4,12 @@ namespace YamlDotNet.System.Text.Json.Tests;
 
 public partial class JsonIgnoreTests
 {
-    public class TestModel
-    {
-        public string MyProp { get; set; } = nameof(TestModel.MyProp);
-
-        [JsonIgnore()]
-        public string Hide { get; set; } = nameof(TestModel.Hide);
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public string Hide2 { get; set; } = nameof(TestModel.Hide2);
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string Show { get; set; } = nameof(TestModel.Show);
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public string Show2 { get; set; } = nameof(TestModel.Show2);
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
-        public string Show3 { get; set; } = nameof(TestModel.Show3);
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? HideWhenNull { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string ShowWhenNotNull { get; set; } = nameof(ShowWhenNotNull);
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public int HideWhenDefault { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public int ShowWhenNotDefault { get; set; } = 42;
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public List<int> ShowWhenEmpty { get; set; } = [];
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public int? HideNullableWhenDefault { get; set; } = 0;
-    }
-
-    public class DirectionalTestModel
-    {
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWriting)]
-        public string WriteOnly { get; set; } = nameof(WriteOnly);
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenReading)]
-        public string ReadOnly { get; set; } = nameof(ReadOnly);
-
-        [JsonInclude]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWriting)]
-        public string IncludedWriteOnlyField = nameof(IncludedWriteOnlyField);
-
-        [JsonInclude]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenReading)]
-        public string IncludedReadOnlyField = nameof(IncludedReadOnlyField);
-
-        [JsonInclude]
-        [JsonPropertyName("aliasedField")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public string IgnoredAliasedField = nameof(IgnoredAliasedField);
-
-        [JsonInclude]
-        [JsonPropertyName("extensionKey")]
-        public string ExtensionKey = nameof(ExtensionKey);
-
-        [JsonInclude]
-        [JsonExtensionData]
-        public Dictionary<string, object> ExtensionData = [];
-    }
-
     [Fact]
     public void Serialize()
     {
-        var model = new TestModel();
+        var model = new FixtureModels.IgnoreConditions.ConditionsModel();
 
-        var yaml = YamlConverter.Serialize(model);
+        var yaml = StaticYaml.Serialize(model);
 
         var expected = """
                           MyProp: MyProp
@@ -104,7 +36,7 @@ public partial class JsonIgnoreTests
 
                     """;
 
-        var model = YamlConverter.Deserialize<TestModel>(yaml);
+        var model = StaticYaml.Deserialize<FixtureModels.IgnoreConditions.ConditionsModel>(yaml);
 
         model.MyProp.ShouldBe("test");
         model.Show.ShouldBe("test5");
@@ -115,9 +47,9 @@ public partial class JsonIgnoreTests
     [Fact]
     public void Serialize_RespectsConditionalIgnoreConditions()
     {
-        var model = new TestModel();
+        var model = new FixtureModels.IgnoreConditions.ConditionsModel();
 
-        var yaml = YamlConverter.Serialize(model);
+        var yaml = StaticYaml.Serialize(model);
 
         yaml.ShouldNotContain("HideWhenNull");
         yaml.ShouldContain("ShowWhenNotNull: ShowWhenNotNull");
@@ -142,21 +74,21 @@ public partial class JsonIgnoreTests
 
                     """;
 
-        var model = YamlConverter.Deserialize<TestModel>(yaml);
+        var model = StaticYaml.Deserialize<FixtureModels.IgnoreConditions.ConditionsModel>(yaml);
 
         model.HideWhenNull.ShouldBe("supplied");
         model.ShowWhenNotNull.ShouldBe("supplied2");
         model.HideWhenDefault.ShouldBe(7);
         model.ShowWhenNotDefault.ShouldBe(8);
         model.ShowWhenEmpty.ShouldBe([1]);
-        model.Hide.ShouldBe(nameof(TestModel.Hide));
-        model.Hide2.ShouldBe(nameof(TestModel.Hide2));
+        model.Hide.ShouldBe(nameof(FixtureModels.IgnoreConditions.ConditionsModel.Hide));
+        model.Hide2.ShouldBe(nameof(FixtureModels.IgnoreConditions.ConditionsModel.Hide2));
     }
 
     [Fact]
     public void Serialize_RespectsDirectionalIgnoreConditions()
     {
-        var yaml = YamlConverter.Serialize(new DirectionalTestModel());
+        var yaml = StaticYaml.Serialize(new FixtureModels.IgnoreConditions.DirectionalModel());
 
         yaml.ShouldNotContain("WriteOnly");
         yaml.ShouldContain("ReadOnly: ReadOnly");
@@ -179,13 +111,13 @@ public partial class JsonIgnoreTests
 
                     """;
 
-        var model = YamlConverter.Deserialize<DirectionalTestModel>(yaml);
+        var model = StaticYaml.Deserialize<FixtureModels.IgnoreConditions.DirectionalModel>(yaml);
 
         model.WriteOnly.ShouldBe("supplied");
-        model.ReadOnly.ShouldBe(nameof(DirectionalTestModel.ReadOnly));
+        model.ReadOnly.ShouldBe(nameof(FixtureModels.IgnoreConditions.DirectionalModel.ReadOnly));
         model.IncludedWriteOnlyField.ShouldBe("supplied-field");
-        model.IncludedReadOnlyField.ShouldBe(nameof(DirectionalTestModel.IncludedReadOnlyField));
-        model.IgnoredAliasedField.ShouldBe(nameof(DirectionalTestModel.IgnoredAliasedField));
+        model.IncludedReadOnlyField.ShouldBe(nameof(FixtureModels.IgnoreConditions.DirectionalModel.IncludedReadOnlyField));
+        model.IgnoredAliasedField.ShouldBe(nameof(FixtureModels.IgnoreConditions.DirectionalModel.IgnoredAliasedField));
         model.ExtensionKey.ShouldBe("extension-value");
         model.ExtensionData.ShouldContainKeyAndValue("extraKey", "extra-value");
     }

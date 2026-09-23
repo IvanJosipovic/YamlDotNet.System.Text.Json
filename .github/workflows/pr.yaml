@@ -11,8 +11,8 @@ jobs:
       contents: read
     uses: IvanJosipovic/templates/.github/workflows/csharp-build-test.yaml@main
 
-  trimmed-consumer:
-    name: Samples and trimmed consumer smoke test
+  aot-tests:
+    name: Native AOT xUnit tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,5 +24,5 @@ jobs:
       with:
         global-json-file: global.json
 
-    - run: dotnet publish samples/YamlDotNet.System.Text.Json.Samples.csproj -f net10.0 -p:TargetFrameworks=net10.0 -r linux-x64 --self-contained true -p:PublishTrimmed=true -p:TrimMode=link -o artifacts/trimming-smoke
-    - run: ./artifacts/trimming-smoke/YamlDotNet.System.Text.Json.Samples
+    - run: dotnet publish tests/YamlDotNet.System.Text.Json.Tests/YamlDotNet.System.Text.Json.Tests.csproj -c Aot -f net10.0 -p:TargetFrameworks=net10.0 -r linux-x64 --self-contained true -o artifacts/aot-tests
+    - run: ./artifacts/aot-tests/YamlDotNet.System.Text.Json.Tests

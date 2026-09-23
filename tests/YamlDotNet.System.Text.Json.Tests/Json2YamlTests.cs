@@ -14,7 +14,7 @@ public class Json2YamlTests
                    }
                    """;
 
-        var yaml = YamlConverter.SerializeJson(json);
+        var yaml = StaticYaml.SerializeJson(json);
 
         var expected = """
                           Temperature: '25'
@@ -33,7 +33,7 @@ public class Json2YamlTests
                    }
                    """;
 
-        var yaml = YamlConverter.SerializeJson(json, sortAlphabetically: true);
+        var yaml = StaticYaml.SerializeJson(json, sortAlphabetically: true);
 
         var expected = """
                           a: '1'
@@ -51,7 +51,7 @@ public class Json2YamlTests
             AllowTrailingCommas = true,
         };
 
-        var yaml = YamlConverter.SerializeJson("{\"value\":\"text\",}", options);
+        var yaml = StaticYaml.SerializeJson("{\"value\":\"text\",}", options);
 
         yaml.ShouldContain("value: text");
     }

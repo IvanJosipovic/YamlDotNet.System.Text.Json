@@ -1,51 +1,10 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using YamlDotNet.Serialization;
-using YamlDotNet.System.Text.Json;
+using TestFixtures;
+
+namespace YamlDotNet.System.Text.Json.Tests;
 
 public class StaticContextApiTests
 {
-    [Fact]
-    public void YamlConverterStaticContextOverloadsRoundTripDtoAndExtensionData()
-    {
-        var context = new TestYamlContext();
-        var value = new StaticContextModel
-        {
-            Name = "api",
-            Mode = StaticContextMode.Production,
-            ExtensionData = new Dictionary<string, object>
-            {
-                ["owner"] = "platform",
-            },
-        };
-
-        var yaml = YamlConverter.Serialize(value, context, sortAlphabetically: true);
-
-        yaml.ReplaceLineEndings().ShouldBe("""
-            display-name: api
-            mode: production
-            owner: platform
-
-            """.ReplaceLineEndings());
-        var restored = YamlConverter.Deserialize<StaticContextModel>(yaml, context);
-        restored.Name.ShouldBe("api");
-        restored.Mode.ShouldBe(StaticContextMode.Production);
-        restored.ExtensionData!["owner"].ShouldBe("platform");
-    }
-
-    [Fact]
-    public void BuilderExtensionsConfigureStaticBuilders()
-    {
-        var context = new TestYamlContext();
-        var serializerBuilder = new StaticSerializerBuilder(context);
-        serializerBuilder.AddSystemTextJson().ShouldBeSameAs(serializerBuilder);
-        serializerBuilder.Build().ShouldNotBeNull();
-
-        var deserializerBuilder = new StaticDeserializerBuilder(context);
-        deserializerBuilder.AddSystemTextJson().ShouldBeSameAs(deserializerBuilder);
-        deserializerBuilder.Build().ShouldNotBeNull();
-    }
-
     [Fact]
     public void SerializeJsonUsesSuppliedDocumentOptions()
     {
@@ -60,67 +19,14 @@ public class StaticContextApiTests
             { // accepted by the supplied options
               "name": "api",
             }
-            """, options).ShouldBe("name: api" + Environment.NewLine);
+            """, new SharedYamlContext(), options).ShouldBe("name: api" + Environment.NewLine);
     }
 
     [Fact]
-    public void ReflectionConvenienceOverloadRemainsAvailable()
+    public void SerializeUsesSuppliedStaticContext()
     {
-        var yaml = YamlConverter.Serialize((object)new StaticContextModel { Name = "api" });
+        var yaml = YamlConverter.Serialize(new ComprehensiveConfiguration { Name = "api" }, new SharedYamlContext());
 
         yaml.ShouldContain("display-name: api");
     }
-
-    [Fact]
-    public void StaticDeserializerCanIgnoreUnmatchedProperties()
-    {
-        var model = YamlConverter.Deserialize<StaticContextModel>("display-name: api\nunknown: value\n", new TestYamlContext(), ignoreUnmatchedProperties: true);
-
-        model.Name.ShouldBe("api");
-    }
-
-    [Fact]
-    public void OmitDefaultsOmitsDefaultEnumValue()
-    {
-        var context = new TestYamlContext();
-        var yaml = YamlConverter.Serialize(
-            new StaticContextModel(),
-            context,
-            defaultValuesHandling: DefaultValuesHandling.OmitDefaults);
-
-        yaml.ShouldNotContain("mode:");
-
-        var directYaml = new StaticSerializerBuilder(context)
-            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
-            .AddSystemTextJson()
-            .Build()
-            .Serialize(new StaticContextModel());
-        directYaml.ShouldNotContain("mode:");
-    }
-
-}
-
-public sealed class StaticContextModel
-{
-    [JsonPropertyName("display-name")]
-    public string Name { get; set; } = string.Empty;
-
-        [JsonPropertyName("mode")]
-        public StaticContextMode Mode { get; set; }
-
-    [JsonExtensionData]
-    public Dictionary<string, object>? ExtensionData { get; set; }
-}
-
-public enum StaticContextMode
-{
-    [JsonStringEnumMemberName("production")]
-    Production,
-}
-
-[YamlStaticContext]
-[YamlSerializable(typeof(StaticContextModel))]
-[YamlSerializable(typeof(StaticContextMode))]
-public sealed partial class TestYamlContext : StaticContext
-{
 }

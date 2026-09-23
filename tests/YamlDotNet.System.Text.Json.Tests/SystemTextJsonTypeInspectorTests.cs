@@ -26,8 +26,8 @@ public class SystemTextJsonTypeInspectorTests
     [Fact]
     public void GetProperty_ReturnsExtensionDescriptorWhenMissing()
     {
-        var container = new ContainerWithExtensionData();
-        container.ExtensionData["dynamic"] = JsonSerializer.SerializeToElement("value");
+        var container = new FixtureModels.ExtensionData.ContainerWithJsonElementExtensionData();
+        container.ExtensionData["dynamic"] = SharedJson.ParseElement("\"value\"");
 
         var attributes = new Attribute[] { new JsonExtensionDataAttribute() };
         var extensionDescriptor = new TestPropertyDescriptor(
@@ -45,7 +45,7 @@ public class SystemTextJsonTypeInspectorTests
 
         var inspector = new SystemTextJsonTypeInspector(new StubTypeInspector(new[] { extensionDescriptor }));
 
-        var result = inspector.GetProperty(typeof(ContainerWithExtensionData), container, "newKey", ignoreUnmatched: true, caseInsensitivePropertyMatching: false);
+        var result = inspector.GetProperty(typeof(FixtureModels.ExtensionData.ContainerWithJsonElementExtensionData), container, "newKey", ignoreUnmatched: true, caseInsensitivePropertyMatching: false);
 
         result.ShouldBeOfType<ExtensionDataPropertyDescriptor>();
         result.Name.ShouldBe("newKey");
@@ -92,7 +92,9 @@ public class SystemTextJsonTypeInspectorTests
         var descriptor = new TestPropertyDescriptor("Value", typeof(string));
         var inspector = new SystemTextJsonTypeInspector(new StubTypeInspector(new[] { descriptor }));
 
-        var property = inspector.GetProperties(typeof(DerivedHiddenPropertyModel), new DerivedHiddenPropertyModel()).Single();
+        var property = inspector.GetProperties(
+            typeof(FixtureModels.TypeInspectorInheritance.DerivedHiddenPropertyModel),
+            new FixtureModels.TypeInspectorInheritance.DerivedHiddenPropertyModel()).Single();
 
         property.Name.ShouldBe("derived-value");
     }
@@ -100,10 +102,10 @@ public class SystemTextJsonTypeInspectorTests
     [Fact]
     public void SerializerHandlesUnannotatedHiddenProperties()
     {
-        var yaml = YamlConverter.Serialize(new DerivedHiddenPropertyModel());
+        var yaml = StaticYaml.Serialize(new FixtureModels.TypeInspectorInheritance.DerivedHiddenPropertyModel());
 
         yaml.ShouldContain("derived-value: derived");
-        Should.NotThrow(() => YamlConverter.Serialize(new DerivedUnannotatedPropertyModel()));
+        Should.NotThrow(() => StaticYaml.Serialize(new FixtureModels.TypeInspectorInheritance.DerivedUnannotatedPropertyModel()));
     }
 
     private sealed class StubTypeInspector : ITypeInspector
@@ -142,30 +144,4 @@ public class SystemTextJsonTypeInspectorTests
         }
     }
 
-    private sealed class ContainerWithExtensionData
-    {
-        public IDictionary<string, JsonElement> ExtensionData { get; set; } = new Dictionary<string, JsonElement>();
-    }
-
-    public class BaseHiddenPropertyModel
-    {
-        [JsonPropertyName("base-value")]
-        public object Value { get; set; } = "base";
-    }
-
-    public sealed class DerivedHiddenPropertyModel : BaseHiddenPropertyModel
-    {
-        [JsonPropertyName("derived-value")]
-        public new string Value { get; set; } = "derived";
-    }
-
-    public class BaseUnannotatedPropertyModel
-    {
-        public int Id { get; set; } = 1;
-    }
-
-    public sealed class DerivedUnannotatedPropertyModel : BaseUnannotatedPropertyModel
-    {
-        public new string Id { get; set; } = "derived";
-    }
 }
