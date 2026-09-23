@@ -24,5 +24,5 @@ jobs:
       with:
         global-json-file: global.json
 
-    - run: dotnet publish samples/YamlDotNet.System.Text.Json.Samples.csproj -f net10.0 -r linux-x64 --self-contained true -p:PublishTrimmed=true -p:TrimMode=link -o artifacts/trimming-smoke
+    - run: dotnet publish samples/YamlDotNet.System.Text.Json.Samples.csproj -f net10.0 -p:TargetFrameworks=net10.0 -r linux-x64 --self-contained true -p:PublishTrimmed=true -p:TrimMode=link -o artifacts/trimming-smoke
     - run: ./artifacts/trimming-smoke/YamlDotNet.System.Text.Json.Samples

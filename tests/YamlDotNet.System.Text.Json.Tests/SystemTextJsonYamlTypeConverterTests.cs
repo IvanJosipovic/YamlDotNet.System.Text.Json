@@ -114,6 +114,18 @@ public class SystemTextJsonYamlTypeConverterTests
         emitter.Events.Count.ShouldBeGreaterThan(0);
     }
 
+    [Fact]
+    public void WriteYaml_SkipsUndefinedJsonNode()
+    {
+        var converter = new SystemTextJsonYamlTypeConverter();
+        var emitter = new RecordingEmitter();
+        var undefined = JsonValue.Create(default(JsonElement));
+
+        converter.WriteYaml(emitter, undefined, typeof(JsonNode), StubSerializer);
+
+        emitter.Events.ShouldBeEmpty();
+    }
+
     private static Parser CreateParser(string yaml)
     {
         var reader = new Parser(new StringReader(yaml ?? string.Empty));
