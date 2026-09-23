@@ -7,6 +7,7 @@ using YamlDotNet.System.Text.Json;
 /// </summary>
 internal static class JsonInputExample
 {
+    /// <summary>Runs the JSON document to YAML example using sorted object keys.</summary>
     public static void Run()
     {
         using var document = JsonDocument.Parse(

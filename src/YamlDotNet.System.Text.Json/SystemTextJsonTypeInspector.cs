@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json;
@@ -71,38 +72,43 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     /// <inheritdoc />
     public IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container)
     {
-        // First, process declared properties as before.
-        var declaredProperties = _innerTypeDescriptor.GetProperties(type, container)
-            .Where(p => ShouldIncludeProperty(type, p, container))
-            .SelectMany(p =>
+        return GetPropertyDescriptors(GetInspectedProperties(type, container), container);
+    }
+
+    private IEnumerable<IPropertyDescriptor> GetPropertyDescriptors(IReadOnlyList<InspectedProperty> properties, object? container)
+    {
+        var declaredProperties = properties
+            .Where(p => ShouldIncludeProperty(p, container))
+            .SelectMany(inspectedProperty =>
             {
-                if (GetCustomAttribute<JsonExtensionDataAttribute>(type, p) != null)
+                var property = inspectedProperty.Descriptor;
+                if (GetCustomAttribute<JsonExtensionDataAttribute>(inspectedProperty) != null)
                 {
                     if (container == null)
                     {
-                        return [p];
+                        return [property];
                     }
 
                     var props = new List<IPropertyDescriptor>();
 
-                    if (p.Read(container).Value is IDictionary<string, JsonElement> extData)
+                    if (property.Read(container).Value is IDictionary<string, JsonElement> extData)
                     {
                         foreach (var entry in extData)
                         {
                             // Create a property descriptor for each extension data key/value.
-                            var extProp = new ExtensionDataPropertyDescriptor(p)
+                            var extProp = new ExtensionDataPropertyDescriptor(property)
                             {
                                 Name = entry.Key,
                             };
                             props.Add(extProp);
                         }
                     }
-                    else if (p.Read(container).Value is IDictionary<string, object> extData2)
+                    else if (property.Read(container).Value is IDictionary<string, object> extData2)
                     {
                         foreach (var entry in extData2)
                         {
                             // Create a property descriptor for each extension data key/value.
-                            var extProp = new ExtensionDataPropertyDescriptor(p)
+                            var extProp = new ExtensionDataPropertyDescriptor(property)
                             {
                                 Name = entry.Key,
                             }; props.Add(extProp);
@@ -113,9 +119,9 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
                 }
                 else
                 {
-                    var descriptor = new PropertyDescriptor(p);
+                    var descriptor = new PropertyDescriptor(property);
 
-                    var nameAttribute = GetCustomAttribute<JsonPropertyNameAttribute>(type, p);
+                    var nameAttribute = GetCustomAttribute<JsonPropertyNameAttribute>(inspectedProperty);
                     if (nameAttribute != null)
                     {
                         descriptor.Name = nameAttribute.Name;
@@ -123,11 +129,17 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
 
                     if (!_ignoreOrder)
                     {
-                        var orderAttribute = GetCustomAttribute<JsonPropertyOrderAttribute>(type, p);
+                        var orderAttribute = GetCustomAttribute<JsonPropertyOrderAttribute>(inspectedProperty);
                         if (orderAttribute != null)
                         {
                             descriptor.Order = orderAttribute.Order;
                         }
+                    }
+
+                    if (property.Type.IsEnum && GetCustomAttribute<global::System.ComponentModel.DefaultValueAttribute>(inspectedProperty) == null)
+                    {
+                        var enumDefault = Array.CreateInstance(property.Type, 1).GetValue(0)!;
+                        return [new EnumDefaultValuePropertyDescriptor(descriptor, new global::System.ComponentModel.DefaultValueAttribute(enumDefault))];
                     }
 
                     return [descriptor];
@@ -143,9 +155,10 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         return declaredProperties.OrderBy(p => p.Order);
     }
 
-    private static bool ShouldIncludeProperty(Type type, IPropertyDescriptor property, object? container)
+    private static bool ShouldIncludeProperty(InspectedProperty inspectedProperty, object? container)
     {
-        var ignore = GetCustomAttribute<JsonIgnoreAttribute>(type, property);
+        var property = inspectedProperty.Descriptor;
+        var ignore = GetCustomAttribute<JsonIgnoreAttribute>(inspectedProperty);
         if (ignore == null)
         {
             return true;
@@ -159,7 +172,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
             JsonIgnoreCondition.WhenWritingDefault => container == null || !IsDefaultValue(property, container),
             JsonIgnoreCondition.WhenWriting => container == null,
             JsonIgnoreCondition.WhenReading => container != null,
-            _ => throw new ArgumentOutOfRangeException(nameof(property), ignore.Condition, "Unsupported JsonIgnoreCondition value."),
+            _ => throw new ArgumentOutOfRangeException(nameof(inspectedProperty), ignore.Condition, "Unsupported JsonIgnoreCondition value."),
         };
     }
 
@@ -172,25 +185,26 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     /// <inheritdoc />
     public IPropertyDescriptor GetProperty(Type type, object? container, string name, bool ignoreUnmatched, bool caseInsensitivePropertyMatching)
     {
+        var inspectedProperties = GetInspectedProperties(type, container);
         IEnumerable<IPropertyDescriptor> candidates;
 
         if (caseInsensitivePropertyMatching)
         {
-            candidates = GetProperties(type, container)
+            candidates = GetPropertyDescriptors(inspectedProperties, container)
                 .Where(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
         else
         {
-            candidates = GetProperties(type, container)
+            candidates = GetPropertyDescriptors(inspectedProperties, container)
                 .Where(p => p.Name == name);
         }
 
         using var enumerator = candidates.GetEnumerator();
         if (!enumerator.MoveNext())
         {
-            var ignoredProperty = _innerTypeDescriptor.GetProperties(type, container)
-                .Where(p => GetCustomAttribute<JsonIgnoreAttribute>(type, p)?.Condition is JsonIgnoreCondition.Always or JsonIgnoreCondition.WhenReading)
-                .Select(p => GetCustomAttribute<JsonPropertyNameAttribute>(type, p)?.Name ?? p.Name)
+            var ignoredProperty = inspectedProperties
+                .Where(p => GetCustomAttribute<JsonIgnoreAttribute>(p)?.Condition is JsonIgnoreCondition.Always or JsonIgnoreCondition.WhenReading)
+                .Select(p => GetCustomAttribute<JsonPropertyNameAttribute>(p)?.Name ?? p.Descriptor.Name)
                 .FirstOrDefault(propertyName => caseInsensitivePropertyMatching
                     ? propertyName.Equals(name, StringComparison.OrdinalIgnoreCase)
                     : propertyName == name);
@@ -200,12 +214,12 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
                 return null!;
             }
 
-            var jsonExtensionData = _innerTypeDescriptor.GetProperties(type, container)
-                .FirstOrDefault(x => GetCustomAttribute<JsonExtensionDataAttribute>(type, x) != null);
+            var jsonExtensionData = inspectedProperties
+                .FirstOrDefault(x => GetCustomAttribute<JsonExtensionDataAttribute>(x) != null);
 
             if (jsonExtensionData != null)
             {
-                var prop = new ExtensionDataPropertyDescriptor(jsonExtensionData)
+                var prop = new ExtensionDataPropertyDescriptor(jsonExtensionData.Descriptor)
                 {
                     Name = name,
                 };
@@ -249,10 +263,89 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "StaticContext registrations root public DTO properties, but ITypeInspector cannot express that requirement on its Type parameter.")]
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "StaticContext registrations root public DTO properties, but ITypeInspector cannot express that requirement on its Type parameter.")]
 #endif
-    private static TAttribute? GetCustomAttribute<TAttribute>(Type type, IPropertyDescriptor property)
+    private IReadOnlyList<InspectedProperty> GetInspectedProperties(Type type, object? container)
+    {
+        return _innerTypeDescriptor.GetProperties(type, container)
+            .Select(property => new InspectedProperty(property, FindMostDerivedProperty(type, property.Name)))
+            .ToArray();
+    }
+
+#if !NETSTANDARD2_0
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "ITypeInspector does not propagate DTO property preservation requirements. StaticContext registrations root public DTO properties.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "ITypeInspector does not propagate DTO property preservation requirements. StaticContext registrations root public DTO properties.")]
+#endif
+    private static PropertyInfo? FindMostDerivedProperty(Type type, string name)
+    {
+        for (var currentType = type; currentType != null; currentType = currentType.BaseType)
+        {
+            var property = currentType
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+                .FirstOrDefault(candidate => candidate.Name == name && candidate.GetIndexParameters().Length == 0);
+            if (property != null)
+            {
+                return property;
+            }
+        }
+
+        return null;
+    }
+
+    private static TAttribute? GetCustomAttribute<TAttribute>(InspectedProperty inspectedProperty)
         where TAttribute : Attribute
     {
-        return property.GetCustomAttribute<TAttribute>()
-            ?? type.GetProperty(property.Name, BindingFlags.Instance | BindingFlags.Public)?.GetCustomAttribute<TAttribute>();
+        return inspectedProperty.Descriptor.GetCustomAttribute<TAttribute>()
+            ?? inspectedProperty.ReflectedProperty?.GetCustomAttribute<TAttribute>();
+    }
+
+    private sealed class InspectedProperty
+    {
+        public InspectedProperty(IPropertyDescriptor descriptor, PropertyInfo? reflectedProperty)
+        {
+            Descriptor = descriptor;
+            ReflectedProperty = reflectedProperty;
+        }
+
+        public IPropertyDescriptor Descriptor { get; }
+
+        public PropertyInfo? ReflectedProperty { get; }
+    }
+
+    private sealed class EnumDefaultValuePropertyDescriptor : IPropertyDescriptor
+    {
+        private readonly IPropertyDescriptor _inner;
+        private readonly global::System.ComponentModel.DefaultValueAttribute _defaultValue;
+
+        public EnumDefaultValuePropertyDescriptor(IPropertyDescriptor inner, global::System.ComponentModel.DefaultValueAttribute defaultValue)
+        {
+            _inner = inner;
+            _defaultValue = defaultValue;
+        }
+
+        public bool AllowNulls => _inner.AllowNulls;
+
+        public string Name => _inner.Name;
+
+        public bool Required => _inner.Required;
+
+        public Type Type => _inner.Type;
+
+        public Type? TypeOverride { get => _inner.TypeOverride; set => _inner.TypeOverride = value; }
+
+        public Type? ConverterType => _inner.ConverterType;
+
+        public int Order { get => _inner.Order; set => _inner.Order = value; }
+
+        public ScalarStyle ScalarStyle { get => _inner.ScalarStyle; set => _inner.ScalarStyle = value; }
+
+        public bool CanWrite => _inner.CanWrite;
+
+        public void Write(object target, object? value) => _inner.Write(target, value);
+
+        public T? GetCustomAttribute<T>() where T : Attribute
+        {
+            return _inner.GetCustomAttribute<T>() ?? (_defaultValue is T attribute ? attribute : null);
+        }
+
+        public IObjectDescriptor Read(object target) => _inner.Read(target);
     }
 }

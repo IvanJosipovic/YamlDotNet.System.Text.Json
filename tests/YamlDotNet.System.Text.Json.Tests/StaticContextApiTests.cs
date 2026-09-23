@@ -79,6 +79,25 @@ public class StaticContextApiTests
         model.Name.ShouldBe("api");
     }
 
+    [Fact]
+    public void OmitDefaultsOmitsDefaultEnumValue()
+    {
+        var context = new TestYamlContext();
+        var yaml = YamlConverter.Serialize(
+            new StaticContextModel(),
+            context,
+            defaultValuesHandling: DefaultValuesHandling.OmitDefaults);
+
+        yaml.ShouldNotContain("mode:");
+
+        var directYaml = new StaticSerializerBuilder(context)
+            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
+            .AddSystemTextJson()
+            .Build()
+            .Serialize(new StaticContextModel());
+        directYaml.ShouldNotContain("mode:");
+    }
+
 }
 
 public sealed class StaticContextModel

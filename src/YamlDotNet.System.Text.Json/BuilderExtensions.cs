@@ -42,6 +42,10 @@ public static class BuilderExtensions
     /// <summary>
     /// Configures a static serializer builder to handle System.Text.Json types.
     /// </summary>
+    /// <param name="builder">The static serializer builder to configure.</param>
+    /// <param name="sortAlphabetically">Whether to sort keys in JSON objects.</param>
+    /// <param name="ignoreOrder">Whether to ignore <see cref="JsonPropertyOrderAttribute"/> on POCO properties.</param>
+    /// <returns>The configured builder.</returns>
     public static StaticSerializerBuilder AddSystemTextJson(this StaticSerializerBuilder builder, bool sortAlphabetically = false, bool ignoreOrder = false)
     {
 #if NETSTANDARD2_0
@@ -84,6 +88,8 @@ public static class BuilderExtensions
     /// <summary>
     /// Configures a static deserializer builder to handle System.Text.Json types.
     /// </summary>
+    /// <param name="builder">The static deserializer builder to configure.</param>
+    /// <returns>The configured builder.</returns>
     public static StaticDeserializerBuilder AddSystemTextJson(this StaticDeserializerBuilder builder)
     {
 #if NETSTANDARD2_0

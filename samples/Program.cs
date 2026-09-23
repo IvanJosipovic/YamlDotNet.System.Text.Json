@@ -14,6 +14,10 @@ internal static class Program
 
 internal static class SampleAssert
 {
+    /// <summary>Compares complete YAML documents after normalizing line endings.</summary>
+    /// <param name="actual">The YAML produced by the sample.</param>
+    /// <param name="expected">The complete expected YAML document.</param>
+    /// <param name="message">The failure message to display.</param>
     public static void YamlEquals(string actual, string expected, string message)
     {
         var normalizedActual = actual.ReplaceLineEndings("\n");
@@ -24,6 +28,9 @@ internal static class SampleAssert
         }
     }
 
+    /// <summary>Throws when a sample condition is false.</summary>
+    /// <param name="condition">The condition that must be true.</param>
+    /// <param name="message">The failure message to display.</param>
     public static void That(bool condition, string message)
     {
         if (!condition)

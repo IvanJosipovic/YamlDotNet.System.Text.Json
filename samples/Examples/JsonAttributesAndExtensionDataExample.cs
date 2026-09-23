@@ -1,4 +1,3 @@
-using YamlDotNet.Serialization;
 using YamlDotNet.System.Text.Json;
 
 /// <summary>
@@ -6,6 +5,7 @@ using YamlDotNet.System.Text.Json;
 /// </summary>
 internal static class JsonAttributesAndExtensionDataExample
 {
+    /// <summary>Runs examples for JSON property attributes and extension data.</summary>
     public static void Run()
     {
         var context = new SamplesYamlContext();

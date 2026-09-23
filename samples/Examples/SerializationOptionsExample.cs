@@ -2,10 +2,11 @@ using YamlDotNet.Serialization;
 using YamlDotNet.System.Text.Json;
 
 /// <summary>
-/// Shows alphabetical sorting, ignoring JSON order attributes, default-value handling, and unmatched-property handling.
+/// Shows POCO property ordering, default-value handling, and unmatched-property handling.
 /// </summary>
 internal static class SerializationOptionsExample
 {
+    /// <summary>Runs examples for POCO ordering, default omission, and unmatched properties.</summary>
     public static void Run()
     {
         var context = new SamplesYamlContext();
@@ -16,13 +17,13 @@ internal static class SerializationOptionsExample
             Mode = ServiceMode.Production,
         };
 
-        var sortedYaml = YamlConverter.Serialize(model, context, sortAlphabetically: true);
-        SampleAssert.YamlEquals(sortedYaml, """
+        var yamlWithJsonKeySortingEnabled = YamlConverter.Serialize(model, context, sortAlphabetically: true);
+        SampleAssert.YamlEquals(yamlWithJsonKeySortingEnabled, """
             mode: production
             display-name: api
             port: 8080
 
-            """, "Alphabetical ordering should produce the expected YAML document.");
+            """, "sortAlphabetically applies to JSON object keys; POCO order follows YamlDotNet defaults and JsonPropertyOrder metadata.");
 
         var declarationOrderYaml = YamlConverter.Serialize(model, context, ignoreOrder: true);
         SampleAssert.YamlEquals(declarationOrderYaml, """
@@ -34,10 +35,9 @@ internal static class SerializationOptionsExample
 
         var defaultsYaml = YamlConverter.Serialize(new ServiceConfiguration(), context, defaultValuesHandling: DefaultValuesHandling.OmitDefaults);
         SampleAssert.YamlEquals(defaultsYaml, """
-            mode: production
             display-name: ''
 
-            """, "OmitDefaults should produce the expected YAML document.");
+            """, "OmitDefaults should omit default enum and numeric values.");
 
         var forwardCompatibleYaml = YamlConverter.Serialize(model, context) + "future-setting: enabled\n";
         var forwardCompatible = YamlConverter.Deserialize<ServiceConfiguration>(forwardCompatibleYaml, context, ignoreUnmatchedProperties: true);

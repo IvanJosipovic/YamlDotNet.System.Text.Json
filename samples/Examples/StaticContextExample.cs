@@ -6,6 +6,7 @@ using YamlDotNet.System.Text.Json;
 /// </summary>
 internal static class StaticContextExample
 {
+    /// <summary>Runs the static-context convenience API and direct-builder examples.</summary>
     public static void Run()
     {
         var context = new SamplesYamlContext();

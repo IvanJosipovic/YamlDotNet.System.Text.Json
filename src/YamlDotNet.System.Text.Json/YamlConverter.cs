@@ -70,6 +70,13 @@ public static class YamlConverter
     /// <summary>
     /// Serializes an object using a generated YamlDotNet static context.
     /// </summary>
+    /// <typeparam name="T">The registered type of the object to serialize.</typeparam>
+    /// <param name="obj">The object to serialize.</param>
+    /// <param name="context">The generated context containing the type metadata.</param>
+    /// <param name="sortAlphabetically">Whether to sort keys in JSON objects.</param>
+    /// <param name="ignoreOrder">Whether to ignore <see cref="JsonPropertyOrderAttribute"/> on POCO properties.</param>
+    /// <param name="defaultValuesHandling">How default values are handled during serialization.</param>
+    /// <returns>The serialized YAML.</returns>
     public static string Serialize<T>(T obj, StaticContext context, bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
     {
 #if NETSTANDARD2_0
@@ -140,6 +147,11 @@ public static class YamlConverter
     /// <summary>
     /// Deserializes YAML to a statically registered type using a generated YamlDotNet static context.
     /// </summary>
+    /// <typeparam name="T">The registered type to deserialize.</typeparam>
+    /// <param name="yaml">The YAML text to deserialize.</param>
+    /// <param name="context">The generated context containing the type metadata.</param>
+    /// <param name="ignoreUnmatchedProperties">Whether to ignore YAML properties not present on the registered type.</param>
+    /// <returns>The deserialized value.</returns>
     public static T Deserialize<T>(string yaml, StaticContext context, bool ignoreUnmatchedProperties = false)
     {
 #if NETSTANDARD2_0
