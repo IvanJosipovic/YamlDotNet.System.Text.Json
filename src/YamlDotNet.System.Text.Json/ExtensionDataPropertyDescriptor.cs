@@ -24,7 +24,10 @@ internal sealed class ExtensionDataPropertyDescriptor : IPropertyDescriptor
 
     public bool Required => false;
 
-    public Type Type => typeof(object);
+#if !NETSTANDARD2_0
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "IPropertyDescriptor.Type cannot express interface preservation. StaticContext registrations root the concrete extension-data dictionary type.")]
+#endif
+    public Type Type => GetIDictionaryKVTypes(_baseDescriptor.Type)?.val ?? typeof(object);
 
     public Type? TypeOverride { get; set; }
 

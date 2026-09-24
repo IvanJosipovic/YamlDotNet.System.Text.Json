@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
@@ -8,18 +8,25 @@
     <LangVersion>preview</LangVersion>
     <IsPackable>false</IsPackable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PublishAot Condition="'$(Configuration)' == 'Aot'">true</PublishAot>
+    <TrimMode Condition="'$(Configuration)' == 'Aot'">full</TrimMode>
+    <JsonSerializerIsReflectionEnabledByDefault Condition="'$(Configuration)' == 'Aot'">false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
-    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="2.4.1" />
-    <PackageReference Include="Shouldly" Version="4.3.0" />
-    <PackageReference Include="Vecc.YamlDotNet.Analyzers.StaticGenerator" Version="18.1.0" PrivateAssets="all" />
-    <PackageReference Include="xunit.v3.mtp-v2" Version="4.0.1" />
+    <PackageReference Include="xunit.v3.aot.mtp-v2" Version="4.0.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" Condition="'$(Configuration)' != 'Aot'" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="2.4.1" Condition="'$(Configuration)' != 'Aot'" />
+    <PackageReference Include="Shouldly" Version="5.0.0-preview.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\YamlDotNet.System.Text.Json\YamlDotNet.System.Text.Json.csproj" />
+    <ProjectReference Include="..\..\tools\YamlDotNet.Analyzers.StaticGenerator\YamlDotNet.Analyzers.StaticGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="artifacts/**/*.cs" />
   </ItemGroup>
 
 </Project>
