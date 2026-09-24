@@ -86,7 +86,3 @@ The test project contains capability-specific shared fixtures and exercises the 
 For applications configuring YamlDotNet's static builders directly, register each model type and enum in the generated static context. The context must include public model properties, fields, and constructors, and enum public fields for `JsonStringEnumMemberNameAttribute`. For `IDictionary<string, JsonElement>` extension data, values may be JSON scalars, dictionaries with string keys, sequences, or existing `JsonElement`, `JsonDocument`, or `JsonNode` instances. Arbitrary CLR objects require runtime JSON metadata and are rejected. `IDictionary<string, object>` extension data retains its values as objects.
 
 Extension-data properties using a concrete dictionary type other than `Dictionary<string, object>` or `Dictionary<string, JsonElement>` should be initialized before deserialization.
-
-### Inspired By
-
-[https://github.com/tomlm/YamlConvert](https://github.com/tomlm/YamlConvert)
