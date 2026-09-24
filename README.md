@@ -75,14 +75,60 @@ var myObject = deserializer.Deserialize<MyType>(yaml)
 
 ### Trimming
 
-The library is trim-analyzed. Its default `YamlConverter` methods and `AddSystemTextJson` extensions for YamlDotNet's reflection based builders are marked as requiring unreferenced code. For trimmed applications, use the `YamlConverter` overloads that accept a generated `StaticContext`, or YamlDotNet's static builders.
+Use the generated `StaticContext` overloads for trimmed or Native AOT apps. Install the generator with `dotnet add package Vecc.YamlDotNet.Analyzers.StaticGenerator`, register every model and enum, and preserve members that carry System.Text.Json attributes:
 
-Add the `Vecc.YamlDotNet.Analyzers.StaticGenerator` package to the consuming application, declare a partial `StaticContext` with `[YamlStaticContext]` and `[YamlSerializable(typeof(MyModel))]`, then pass that context to `YamlConverter.Serialize` and `YamlConverter.Deserialize<T>`. Register all application model types used by the context, including enum types. The `AddSystemTextJson` builder extensions also support YamlDotNet's static builder types.
+```csharp
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
+using YamlDotNet.Serialization;
+using YamlDotNet.System.Text.Json;
 
-The test project contains capability-specific shared fixtures and exercises the supported `JsonNode`, `JsonArray`, `JsonObject`, `JsonValue`, `JsonElement`, and `JsonDocument` types, as well as JSON attributes, extension data, naming, ordering, defaults, ignore conditions, enum names, and unmatched properties. CI publishes a focused xUnit Native AOT suite that covers the comprehensive fixture through a generated static context and a source-generated `JsonTypeInfo<T>` converter for included fields and `JsonElement` extension data.
+[YamlStaticContext]
+[YamlSerializable(typeof(ServiceConfig))]
+[YamlSerializable(typeof(DeploymentMode))]
+public partial class AppYamlContext : StaticContext
+{
+}
 
-`SystemTextJsonTypeInspector` reads `System.Text.Json` attributes from model metadata at runtime. A generated YAML static context registers the model descriptors, but trimmed applications must also retain those attributes, for example with `[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MyModel))]` or by rooting the model assembly. The Native AOT tests apply targeted `DynamicDependency` roots to their registered fixture models.
+public sealed class ServiceConfig
+{
+    [JsonPropertyName("service-name")]
+    public string Name { get; set; } = "api";
 
-For applications configuring YamlDotNet's static builders directly, register each model type and enum in the generated static context. The context must include public model properties, fields, and constructors, and enum public fields for `JsonStringEnumMemberNameAttribute`. For `IDictionary<string, JsonElement>` extension data, values may be JSON scalars, dictionaries with string keys, sequences, or existing `JsonElement`, `JsonDocument`, or `JsonNode` instances. Arbitrary CLR objects require runtime JSON metadata and are rejected. `IDictionary<string, object>` extension data retains its values as objects.
+    public DeploymentMode Mode { get; set; }
+}
 
-Extension-data properties using a concrete dictionary type other than `Dictionary<string, object>` or `Dictionary<string, JsonElement>` should be initialized before deserialization.
+public enum DeploymentMode
+{
+    [JsonStringEnumMemberName("production")]
+    Production,
+}
+
+internal static class Program
+{
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ServiceConfig))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields, typeof(DeploymentMode))]
+    private static void Main()
+    {
+        var context = new AppYamlContext();
+        var yaml = YamlConverter.Serialize(new ServiceConfig { Name = "api" }, context);
+        var config = YamlConverter.Deserialize<ServiceConfig>(yaml, context);
+    }
+}
+```
+
+To use YamlDotNet's builder APIs with the same context:
+
+```csharp
+var serializer = new StaticSerializerBuilder(context)
+    .AddSystemTextJson()
+    .Build();
+var deserializer = new StaticDeserializerBuilder(context)
+    .AddSystemTextJson()
+    .Build();
+
+var yaml = serializer.Serialize(config);
+var roundTripped = deserializer.Deserialize<ServiceConfig>(yaml);
+```
+
+Set `<PublishAot>true</PublishAot>` in the app project for Native AOT, or `<PublishTrimmed>true</PublishTrimmed>` for trimming, then publish for your target runtime identifier. The context APIs use generated YamlDotNet model metadata; contextless `YamlConverter` methods and YamlDotNet's reflection builders require unreferenced code.
