@@ -15,6 +15,7 @@ namespace YamlDotNet.System.Text.Json;
 public static class YamlConverter
 {
     [RequiresUnreferencedCode("YamlDotNet's reflection based serializer is not trim safe.")]
+    [RequiresDynamicCode("YamlDotNet's reflection based serializer uses dynamic code. Use a generated StaticContext for Native AOT support.")]
     private static ISerializer GetSerializer(bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
     {
         return new SerializerBuilder()
@@ -24,6 +25,7 @@ public static class YamlConverter
     }
 
     [RequiresUnreferencedCode("YamlDotNet's reflection based deserializer is not trim safe.")]
+    [RequiresDynamicCode("YamlDotNet's reflection based deserializer uses dynamic code. Use a generated StaticContext for Native AOT support.")]
     private static IDeserializer GetDeserializer(bool ignoreUnmatchedProperties = false)
     {
         var builder = new DeserializerBuilder()
@@ -47,6 +49,7 @@ public static class YamlConverter
     /// or omitted.</param>
     /// <returns>A string containing the serialized representation of the object.</returns>
     [RequiresUnreferencedCode("YamlDotNet's default serializer uses runtime reflection. Use the overload that accepts a generated StaticContext for trimming support.")]
+    [RequiresDynamicCode("YamlDotNet's default serializer uses dynamic code. Use the overload that accepts a generated StaticContext for Native AOT support.")]
     public static string Serialize(object obj, bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
     {
         return SerializeCore(obj, sortAlphabetically, ignoreOrder, defaultValuesHandling);
@@ -62,6 +65,7 @@ public static class YamlConverter
     /// <param name="defaultValuesHandling">How default values are handled.</param>
     /// <returns>The serialized YAML.</returns>
     [RequiresUnreferencedCode("YamlDotNet's default serializer uses runtime reflection. Use the overload that accepts a generated StaticContext for trimming support.")]
+    [RequiresDynamicCode("YamlDotNet's default serializer uses dynamic code. Use the overload that accepts a generated StaticContext for Native AOT support.")]
     public static string Serialize<T>(T obj, bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
     {
         return SerializeCore(obj, sortAlphabetically, ignoreOrder, defaultValuesHandling);
@@ -95,6 +99,7 @@ public static class YamlConverter
     }
 
     [RequiresUnreferencedCode("YamlDotNet's reflection based serializer is not trim safe.")]
+    [RequiresDynamicCode("YamlDotNet's reflection based serializer uses dynamic code. Use a generated StaticContext for Native AOT support.")]
     private static string SerializeCore(object? obj, bool sortAlphabetically, bool ignoreOrder, DefaultValuesHandling defaultValuesHandling)
     {
         var serializer = GetSerializer(sortAlphabetically, ignoreOrder, defaultValuesHandling);
@@ -113,6 +118,7 @@ public static class YamlConverter
     /// default values, or other options to modify this behavior.</param>
     /// <returns>A string containing the serialized representation of the input JSON.</returns>
     [RequiresUnreferencedCode("YamlDotNet's default serializer uses runtime reflection. Use YamlDotNet's static builder APIs with a generated StaticContext for trimming support.")]
+    [RequiresDynamicCode("YamlDotNet's default serializer uses dynamic code. Use YamlDotNet's static builder APIs with a generated StaticContext for Native AOT support.")]
     public static string SerializeJson(string json, JsonSerializerOptions? jsonSerializerOptions = null, bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
     {
         var serializer = GetSerializer(sortAlphabetically, ignoreOrder, defaultValuesHandling);
@@ -129,6 +135,43 @@ public static class YamlConverter
     }
 
     /// <summary>
+    /// Serializes JSON to YAML using a generated YamlDotNet static context.
+    /// </summary>
+    /// <param name="json">The JSON text to serialize.</param>
+    /// <param name="context">The generated context containing the static YAML metadata.</param>
+    /// <param name="jsonSerializerOptions">Optional settings used to parse the JSON document.</param>
+    /// <param name="sortAlphabetically">Whether to sort object keys alphabetically.</param>
+    /// <param name="ignoreOrder">Whether to ignore JSON property order metadata.</param>
+    /// <param name="defaultValuesHandling">How default values are handled.</param>
+    /// <returns>The YAML representation of the JSON document.</returns>
+    public static string SerializeJson(string json, StaticContext context, JsonSerializerOptions? jsonSerializerOptions = null, bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
+    {
+#if NETSTANDARD2_0
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+#else
+        ArgumentNullException.ThrowIfNull(context);
+#endif
+        var serializer = new StaticSerializerBuilder(context)
+            .ConfigureDefaultValuesHandling(defaultValuesHandling)
+            .AddSystemTextJson(sortAlphabetically, ignoreOrder)
+            .Build();
+        var documentOptions = jsonSerializerOptions is null
+            ? default
+            : new JsonDocumentOptions
+            {
+                AllowTrailingCommas = jsonSerializerOptions.AllowTrailingCommas,
+                CommentHandling = jsonSerializerOptions.ReadCommentHandling,
+                MaxDepth = jsonSerializerOptions.MaxDepth,
+            };
+
+        using var document = JsonDocument.Parse(json, documentOptions);
+        return serializer.Serialize(document);
+    }
+
+    /// <summary>
     /// Deserializes a YAML string into an object of the specified type.
     /// </summary>
     /// <remarks>If no deserializer is provided, a default implementation is used. The method expects the YAML
@@ -138,6 +181,7 @@ public static class YamlConverter
     /// <param name="ignoreUnmatchedProperties">Instructs the deserializer to ignore unmatched properties instead of throwing an exception.</param>
     /// <returns>An instance of type T populated with data from the YAML string.</returns>
     [RequiresUnreferencedCode("YamlDotNet's default deserializer uses runtime reflection. Use the overload that accepts a generated StaticContext for trimming support.")]
+    [RequiresDynamicCode("YamlDotNet's default deserializer uses dynamic code. Use the overload that accepts a generated StaticContext for Native AOT support.")]
     public static T Deserialize<T>(string yaml, bool ignoreUnmatchedProperties = false)
     {
         var deserializer = GetDeserializer(ignoreUnmatchedProperties);

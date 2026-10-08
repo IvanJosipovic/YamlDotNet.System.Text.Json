@@ -4,24 +4,12 @@ namespace YamlDotNet.System.Text.Json.Tests;
 
 public class JsonPropertyOrderTests
 {
-    public class TestModel2
-    {
-        [JsonPropertyOrder(3)]
-        public string MyProp { get; set; } = nameof(MyProp);
-
-        [JsonPropertyOrder(2)]
-        public string MyProp2 { get; set; } = nameof(MyProp2);
-
-        [JsonPropertyOrder(1)]
-        public string MyProp3 { get; set; } = nameof(MyProp3);
-    }
-
     [Fact]
     public void PropertyOrder()
     {
-        var model = new TestModel2();
+        var model = new FixtureModels.ConfigurationAndAttributes.PropertyOrderModel();
 
-        var yaml = YamlConverter.Serialize(model);
+        var yaml = StaticYaml.Serialize(model);
 
         var expected = """
                           MyProp3: MyProp3
@@ -35,9 +23,9 @@ public class JsonPropertyOrderTests
     [Fact]
     public void DisablePropertyOrder()
     {
-        var model = new TestModel2();
+        var model = new FixtureModels.ConfigurationAndAttributes.PropertyOrderModel();
 
-        var yaml = YamlConverter.Serialize(model, ignoreOrder: true);
+        var yaml = StaticYaml.Serialize(model, ignoreOrder: true);
 
         var expected = """
                           MyProp: MyProp

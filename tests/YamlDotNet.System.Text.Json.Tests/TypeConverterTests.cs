@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using YamlDotNet.Core;
+using TestFixtures;
 
 namespace YamlDotNet.System.Text.Json.Tests;
 
@@ -75,11 +76,11 @@ public class TypeConverterTests
     [MemberData(nameof(GetValueTests))]
     public void JsonValueTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonValue>(val, JsonSerializerOptions);
+        var input = JsonNode.Parse(val)!.AsValue();
 
-        var yaml = YamlConverter.Serialize(input!);
+        var yaml = StaticYaml.Serialize(input!);
 
-        var output = YamlConverter.Deserialize<JsonValue>(yaml);
+        var output = StaticYaml.Deserialize<JsonValue>(yaml);
 
         Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
@@ -88,11 +89,11 @@ public class TypeConverterTests
     [MemberData(nameof(GetArrayTests))]
     public void JsonArrayTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonArray>(val, JsonSerializerOptions);
+        var input = JsonNode.Parse(val)!.AsArray();
 
-        var yaml = YamlConverter.Serialize(input!);
+        var yaml = StaticYaml.Serialize(input!);
 
-        var output = YamlConverter.Deserialize<JsonArray>(yaml);
+        var output = StaticYaml.Deserialize<JsonArray>(yaml);
 
         Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
@@ -101,11 +102,11 @@ public class TypeConverterTests
     [MemberData(nameof(GetObjectTests))]
     public void JsonObjectTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonObject>(val, JsonSerializerOptions);
+        var input = JsonNode.Parse(val)!.AsObject();
 
-        var yaml = YamlConverter.Serialize(input!);
+        var yaml = StaticYaml.Serialize(input!);
 
-        var output = YamlConverter.Deserialize<JsonObject>(yaml);
+        var output = StaticYaml.Deserialize<JsonObject>(yaml);
 
         Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
@@ -116,11 +117,11 @@ public class TypeConverterTests
     [MemberData(nameof(GetArrayTests))]
     public void JsonNodeTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonNode>(val, JsonSerializerOptions);
+        var input = JsonNode.Parse(val);
 
-        var yaml = YamlConverter.Serialize(input!);
+        var yaml = StaticYaml.Serialize(input!);
 
-        var output = YamlConverter.Deserialize<JsonNode>(yaml);
+        var output = StaticYaml.Deserialize<JsonNode>(yaml);
 
         Assert.Equal(val, output.ToJsonString(JsonSerializerOptions));
     }
@@ -131,13 +132,13 @@ public class TypeConverterTests
     [MemberData(nameof(GetArrayTests))]
     public void JsonElementTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonElement>(val, JsonSerializerOptions);
+        var input = SharedJson.ParseElement(val);
 
-        var yaml = YamlConverter.Serialize(input);
+        var yaml = StaticYaml.Serialize(input);
 
-        var output = YamlConverter.Deserialize<JsonElement>(yaml);
+        var output = StaticYaml.Deserialize<JsonElement>(yaml);
 
-        Assert.Equal(val, JsonSerializer.Serialize(output, JsonSerializerOptions));
+        Assert.True(JsonElement.DeepEquals(input, output));
     }
 
     [Theory]
@@ -146,13 +147,13 @@ public class TypeConverterTests
     [MemberData(nameof(GetArrayTests))]
     public void JsonDocumentTests(string val)
     {
-        var input = JsonSerializer.Deserialize<JsonDocument>(val, JsonSerializerOptions);
+        var input = JsonDocument.Parse(val);
 
-        var yaml = YamlConverter.Serialize(input!);
+        var yaml = StaticYaml.Serialize(input!);
 
-        var output = YamlConverter.Deserialize<JsonDocument>(yaml);
+        var output = StaticYaml.Deserialize<JsonDocument>(yaml);
 
-        Assert.Equal(val, JsonSerializer.Serialize(output, JsonSerializerOptions));
+        Assert.True(JsonElement.DeepEquals(input.RootElement, output.RootElement));
     }
 
     public static IEnumerable<object[]> GetObjectSortTests()
@@ -169,31 +170,13 @@ public class TypeConverterTests
     [MemberData(nameof(GetObjectSortTests))]
     public void JsonNodeSortTests(string inputVal, string outputVal)
     {
-        var input = JsonSerializer.Deserialize<JsonNode>(inputVal, JsonSerializerOptions);
+        var input = JsonNode.Parse(inputVal);
 
-        var yaml = YamlConverter.Serialize(input!, sortAlphabetically: true);
+        var yaml = StaticYaml.Serialize(input!, sortAlphabetically: true);
 
-        var output = YamlConverter.Deserialize<JsonNode>(yaml);
+        var output = StaticYaml.Deserialize<JsonNode>(yaml);
 
         Assert.Equal(outputVal, output.ToJsonString(JsonSerializerOptions));
-    }
-
-    public class V1ObjectMeta
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
-    }
-
-    public class V1CustomResourceDefinition
-    {
-        [JsonPropertyName("apiVersion")]
-        public string ApiVersion { get; set; } = default!;
-
-        [JsonPropertyName("kind")]
-        public string Kind { get; set; } = default!;
-
-        [JsonPropertyName("metadata")]
-        public V1ObjectMeta Metadata { get; set; } = default!;
     }
 
     [Fact]
@@ -208,9 +191,9 @@ public class TypeConverterTests
                       test: value
                     """;
 
-        var output = YamlConverter.Deserialize<V1CustomResourceDefinition>(yaml, true);
+        var output = StaticYaml.Deserialize<FixtureModels.UnmatchedProperties.V1CustomResourceDefinition>(yaml, true);
 
-        var yamlOutput = YamlConverter.Serialize(output);
+        var yamlOutput = StaticYaml.Serialize(output);
 
         var yamlExpected = """
                     apiVersion: 1.2.3
@@ -235,6 +218,6 @@ public class TypeConverterTests
                       test: value
                     """;
 
-        Assert.Throws<YamlException>(() => YamlConverter.Deserialize<V1CustomResourceDefinition>(yaml));
+        Assert.Throws<YamlException>(() => StaticYaml.Deserialize<FixtureModels.UnmatchedProperties.V1CustomResourceDefinition>(yaml));
     }
 }
