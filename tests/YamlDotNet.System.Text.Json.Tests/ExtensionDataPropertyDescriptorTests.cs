@@ -23,7 +23,7 @@ public class ExtensionDataPropertyDescriptorTests
         descriptor.AllowNulls.ShouldBeTrue();
         descriptor.Name.ShouldBe("ExtensionData");
         descriptor.Required.ShouldBeFalse();
-        descriptor.Type.ShouldBe(typeof(object));
+        descriptor.Type.ShouldBe(typeof(JsonElement));
         descriptor.TypeOverride.ShouldBe(typeof(int));
         descriptor.ConverterType.ShouldBe(typeof(string));
         descriptor.Order.ShouldBe(7);
@@ -63,6 +63,7 @@ public class ExtensionDataPropertyDescriptorTests
         var stored = (IDictionary<string, object>)baseDescriptor.Read(target).Value!;
         stored.ShouldContainKey("ExtensionData");
         stored["ExtensionData"].ShouldBe(42);
+        descriptor.Type.ShouldBe(typeof(object));
     }
 
     [Fact]
@@ -126,6 +127,14 @@ public class ExtensionDataPropertyDescriptorTests
         Should.Throw<InvalidOperationException>(() => descriptor.Write(target, "value"));
     }
 
+    [Fact]
+    public void TypeDefaultsToObjectForNonDictionaryProperty()
+    {
+        var descriptor = new ExtensionDataPropertyDescriptor(new TestPropertyDescriptor("value", typeof(string)));
+
+        descriptor.Type.ShouldBe(typeof(object));
+    }
+
     [Theory]
     [MemberData(nameof(JsonScalarValues))]
     public void WriteConvertsSupportedJsonScalarsToJsonElement(object? value, string expectedJson)
@@ -160,8 +169,8 @@ public class ExtensionDataPropertyDescriptorTests
         { new DateTime(2020, 1, 2, 3, 4, 5, DateTimeKind.Utc), "\"2020-01-02T03:04:05Z\"" },
         { new DateTimeOffset(2020, 1, 2, 3, 4, 5, TimeSpan.Zero), "\"2020-01-02T03:04:05+00:00\"" },
         { Guid.Parse("00112233-4455-6677-8899-aabbccddeeff"), "\"00112233-4455-6677-8899-aabbccddeeff\"" },
-        { SignedEnum.Negative, "-1" },
-        { UnsignedEnum.Maximum, "18446744073709551615" },
+        { FixtureModels.ExtensionData.DescriptorEdgeCases.SignedEnum.Negative, "-1" },
+        { FixtureModels.ExtensionData.DescriptorEdgeCases.UnsignedEnum.Maximum, "18446744073709551615" },
     };
 
     [Fact]
@@ -223,7 +232,7 @@ public class ExtensionDataPropertyDescriptorTests
     [Fact]
     public void WriteRequiresCustomDictionaryToBeInitialized()
     {
-        var descriptor = new ExtensionDataPropertyDescriptor(new TestPropertyDescriptor("value", typeof(CustomDictionary)));
+        var descriptor = new ExtensionDataPropertyDescriptor(new TestPropertyDescriptor("value", typeof(FixtureModels.ExtensionData.DescriptorEdgeCases.CustomDictionary)));
 
         Should.Throw<InvalidOperationException>(() => descriptor.Write(new object(), 2))
             .Message.ShouldContain("Initialize the property before deserialization");
@@ -232,7 +241,7 @@ public class ExtensionDataPropertyDescriptorTests
     [Fact]
     public void WriteRequiresCustomJsonElementDictionaryToBeInitialized()
     {
-        var descriptor = new ExtensionDataPropertyDescriptor(new TestPropertyDescriptor("value", typeof(CustomJsonElementDictionary)));
+        var descriptor = new ExtensionDataPropertyDescriptor(new TestPropertyDescriptor("value", typeof(FixtureModels.ExtensionData.DescriptorEdgeCases.CustomJsonElementDictionary)));
 
         Should.Throw<InvalidOperationException>(() => descriptor.Write(new object(), JsonDocument.Parse("null").RootElement))
             .Message.ShouldContain("Initialize the property before deserialization");
@@ -247,23 +256,5 @@ public class ExtensionDataPropertyDescriptorTests
 
         descriptor.GetCustomAttribute<JsonIgnoreAttribute>().ShouldBeSameAs(attribute);
         descriptor.GetCustomAttribute<JsonPropertyNameAttribute>().ShouldBeNull();
-    }
-
-    private enum SignedEnum : long
-    {
-        Negative = -1,
-    }
-
-    private enum UnsignedEnum : ulong
-    {
-        Maximum = ulong.MaxValue,
-    }
-
-    private sealed class CustomDictionary : Dictionary<string, object>
-    {
-    }
-
-    private sealed class CustomJsonElementDictionary : Dictionary<string, JsonElement>
-    {
     }
 }
