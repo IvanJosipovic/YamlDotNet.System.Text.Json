@@ -37,9 +37,90 @@ Supported Objects:
 
 ```dotnet add package YamlDotNet.System.Text.Json```
 
+## YamlSerializer
+
+**YamlSerializer** serializes and deserializes YAML using the source generated contracts (`JsonTypeInfo<T>`) that your application already produces for System.Text.Json. No separate YAML metadata, attributes or context registration are needed, and no reflection is used, so it works with Native AOT and trimming. All System.Text.Json converters, attributes and options keep working because the actual object mapping is delegated to `JsonSerializer`.
+
+```csharp
+using System.Text.Json.Serialization;
+using YamlDotNet.System.Text.Json;
+
+[JsonSerializable(typeof(Person))]
+public partial class AppJsonContext : JsonSerializerContext;
+
+public sealed class Person
+{
+    public string Name { get; set; } = "";
+    public int Age { get; set; }
+}
+
+internal static class Program
+{
+    private static void Main()
+    {
+        var person = new Person
+        {
+            Name = "John",
+            Age = 30,
+        };
+
+        // serialize to YAML using the same contract as JSON
+        string yaml = YamlSerializer.Serialize(person, AppJsonContext.Default.Person);
+
+        // deserialize from YAML using the same contract as JSON
+        Person? result = YamlSerializer.Deserialize(yaml, AppJsonContext.Default.Person);
+
+        // stream overloads (UTF-8, the stream is not closed)
+        YamlSerializer.Serialize(stream, person, AppJsonContext.Default.Person);
+        result = YamlSerializer.Deserialize(stream, AppJsonContext.Default.Person);
+    }
+}
+```
+
+The same context keeps working for JSON:
+
+```csharp
+var json = JsonSerializer.Serialize(person, AppJsonContext.Default.Person);
+```
+
+### YAML scalar semantics
+
+Plain (unquoted) scalars are resolved with the YAML 1.2 core schema, which matches JSON semantics:
+
+| YAML input | Resolved as |
+|---|---|
+| `null`, `Null`, `NULL`, `~`, empty | JSON `null` |
+| `true`, `True`, `TRUE`, `false` | JSON boolean |
+| `123`, `-4`, `+5` | JSON integer |
+| `1.20`, `-0.5`, `1e3` | JSON number (parsed invariant, `decimal` first, then `double`) |
+| `yes`, `no`, `on`, `off`, `0x1A`, `0o17`, `2026-01-01` | JSON string (YAML 1.1 only values are treated as strings) |
+| `"true"`, `"00123"`, `'1.20'`, block scalars (`|`, `>`) | JSON string, always |
+
+Quoted scalars are always strings. Numbers are written back to YAML with their exact JSON text representation, so values do not lose precision. Large integers beyond `long` are preserved as exact JSON numbers.
+
+Strings that a YAML parser could misinterpret are quoted on output: a JSON string `"true"` is emitted as `'true'` so it round-trips as a string.
+
+### Supported and unsupported YAML
+
+Supported: mappings with string keys, sequences, plain/quoted/block scalars, comments (ignored), standard YAML tags (`!!str`, `!!int`, `!!float`, `!!bool`, `!!null`), duplicate keys (last value wins), explicit document start (`---`).
+
+Unsupported (these fail with a `YamlException` instead of producing incorrect results):
+
+- Anchors and aliases (`&anchor`, `*alias`), including merge keys (`<<`)
+- Complex mapping keys (sequences or mappings used as keys)
+- Custom tags (`!Custom`)
+- Multiple documents in one input (only the first document would be valid; the input is rejected)
+- `.nan`, `.inf` and `-.inf` scalars, which have no JSON number representation (quote them to treat them as strings)
+
+### Limitations
+
+- Source generated contexts must include metadata for the target types (the default `JsonSerializable` generation mode does). Types registered only for the serialization fast path may not support deserialization.
+- YAML input nesting beyond `System.Text.Json`'s `MaxDepth` (64) fails with a `JsonException`.
+- Benchmarks comparing the reflection, static context and contract based APIs live in `benchmarks/YamlDotNet.System.Text.Json.Benchmarks` and can be run with `dotnet run -c Release --project benchmarks/YamlDotNet.System.Text.Json.Benchmarks -- --filter *`.
+
 ## YamlConverter
 
-**YamlConverter** - exposes Serialize() and Deserialize\<T>() methods
+**YamlConverter** - exposes Serialize() and Deserialize\<T>() methods. Prefer [YamlSerializer](#yamlserializer) when a source generated System.Text.Json context is available; `YamlConverter` uses YamlDotNet's reflection or static context based pipelines.
 
 ```csharp
 // to serialize a object to yaml
