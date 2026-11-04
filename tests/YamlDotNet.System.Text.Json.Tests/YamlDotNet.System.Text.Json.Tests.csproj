@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\YamlDotNet.System.Text.Json\YamlDotNet.System.Text.Json.csproj" />
     <ProjectReference Include="..\..\tools\YamlDotNet.Analyzers.StaticGenerator\YamlDotNet.Analyzers.StaticGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\ExternalContracts\ExternalContracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
