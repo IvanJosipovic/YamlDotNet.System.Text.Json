@@ -121,9 +121,14 @@ public class SystemTextJsonTypeInspectorTests
     public void StaticContextUsesJsonIncludeForPublicFields()
     {
         var yaml = StaticYaml.Serialize(new FixtureModels.ConfigurationAndAttributes.FieldModel());
+        var unannotatedFieldDescriptor = new SharedYamlContext()
+            .GetTypeInspector()
+            .GetProperties(typeof(FixtureModels.ConfigurationAndAttributes.FieldModel), null)
+            .Single(property => property.Name == nameof(FixtureModels.ConfigurationAndAttributes.FieldModel.UnannotatedField));
 
         yaml.ShouldContain("included-field: included");
         yaml.ShouldNotContain("UnannotatedField");
+        unannotatedFieldDescriptor.GetCustomAttribute<JsonIgnoreAttribute>().ShouldNotBeNull();
     }
 
     [Fact]
