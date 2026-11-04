@@ -40,10 +40,28 @@ namespace YamlDotNet.Analyzers.StaticGenerator
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
+        private static readonly DiagnosticDescriptor MultipleStaticContextsDescriptor = new DiagnosticDescriptor(
+            id: "YDNG002",
+            title: "Multiple YamlDotNet static contexts are not supported",
+            messageFormat: "Only one [YamlStaticContext] type is supported per compilation; '{0}' is an additional context",
+            category: "YamlDotNet.StaticGenerator",
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
         public void Execute(GeneratorExecutionContext context)
         {
             if (!(context.SyntaxContextReceiver is SerializableSyntaxReceiver receiver))
             {
+                return;
+            }
+
+            if (receiver.YamlStaticContextTypes.Count > 1)
+            {
+                var secondContext = receiver.YamlStaticContextTypes[1];
+                context.ReportDiagnostic(Diagnostic.Create(
+                    MultipleStaticContextsDescriptor,
+                    secondContext.Locations.FirstOrDefault(),
+                    secondContext.Name));
                 return;
             }
 
@@ -92,11 +110,14 @@ namespace YamlDotNet.Analyzers.StaticGenerator
 
             try
             {
+                write("#nullable enable", true);
                 write("#pragma warning disable CS8767 // Nullability of reference types", true);
                 write("#pragma warning disable CS8767 // Nullability of reference types", true);
                 write("#pragma warning disable CS8603 // Possible null reference return", true);
                 write("#pragma warning disable CS8604 // Possible null reference argument", true);
                 write("#pragma warning disable CS8766 // Nullability of reference types", true);
+                write("#pragma warning disable CS8625 // Null literal to non-nullable reference type", true);
+                write("#pragma warning disable CS8765 // Nullability mismatch in an override", true);
 
                 write("using System;", true);
                 write("using System.Collections.Generic;", true);
@@ -271,6 +292,12 @@ namespace YamlDotNet.Analyzers.StaticGenerator
                 case "System.DateTimeOffset":
                 case "System.Uri":
                 case "System.Type":
+                case "System.Text.Json.JsonElement":
+                case "System.Text.Json.JsonDocument":
+                case "System.Text.Json.Nodes.JsonNode":
+                case "System.Text.Json.Nodes.JsonObject":
+                case "System.Text.Json.Nodes.JsonArray":
+                case "System.Text.Json.Nodes.JsonValue":
 #if NET6_0_OR_GREATER
                 case "System.DateOnly":
                 case "System.TimeOnly":

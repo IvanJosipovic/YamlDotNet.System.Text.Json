@@ -79,24 +79,13 @@ namespace YamlDotNet.Analyzers.StaticGenerator
 
         static string GetFullName(this INamedTypeSymbol symbol)
         {
+            if (symbol.ContainingType != null)
+            {
+                return $"{GetFullName(symbol.ContainingType)}.{symbol.Name}{GetGenericTypes(symbol.TypeArguments)}{symbol.GetNullable()}";
+            }
+
             var space = GetNamespace(symbol);
             var suffix = GetGenericTypes(symbol.TypeArguments); ;
-
-            var containingTypes = new Stack<string>();
-            var containingSymbol = symbol.ContainingType;
-            while (containingSymbol != null)
-            {
-                containingTypes.Push(containingSymbol.Name);
-                containingSymbol = containingSymbol.ContainingType;
-            }
-
-            var containingTypePath = string.Join(".", containingTypes);
-            if (!string.IsNullOrWhiteSpace(containingTypePath))
-            {
-                space = string.IsNullOrWhiteSpace(space)
-                    ? containingTypePath
-                    : $"{space}.{containingTypePath}";
-            }
 
             if (!string.IsNullOrWhiteSpace(space))
             {
@@ -123,7 +112,7 @@ namespace YamlDotNet.Analyzers.StaticGenerator
                         output.Add(typeParameterSymbol.Name + typeParameterSymbol.GetNullable());
                         break;
                     case IArrayTypeSymbol arrayTypeSymbol:
-                        output.Add(GetFullName(arrayTypeSymbol.ElementType) + "[]");
+                        output.Add(GetFullName(arrayTypeSymbol));
                         break;
                     default:
                         throw new NotSupportedException($"Cannot generate type name from type argument {argument.GetType().FullName}");
@@ -132,7 +121,7 @@ namespace YamlDotNet.Analyzers.StaticGenerator
 
             if (output.Count > 0)
             {
-                return $"<{string.Join(", ", typeArguments)}>";
+                return $"<{string.Join(", ", output)}>";
             }
 
             return string.Empty;

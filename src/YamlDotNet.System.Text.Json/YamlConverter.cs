@@ -131,7 +131,8 @@ public static class YamlConverter
                 MaxDepth = jsonSerializerOptions.MaxDepth,
             };
 
-        return serializer.Serialize(JsonDocument.Parse(json, documentOptions));
+        using var document = JsonDocument.Parse(json, documentOptions);
+        return serializer.Serialize(document);
     }
 
     /// <summary>
@@ -144,7 +145,7 @@ public static class YamlConverter
     /// <param name="ignoreOrder">Whether to ignore JSON property order metadata.</param>
     /// <param name="defaultValuesHandling">How default values are handled.</param>
     /// <returns>The YAML representation of the JSON document.</returns>
-    public static string SerializeJson(string json, StaticContext context, JsonSerializerOptions? jsonSerializerOptions = null, bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
+    public static string SerializeJsonStatic(string json, StaticContext context, JsonSerializerOptions? jsonSerializerOptions = null, bool sortAlphabetically = false, bool ignoreOrder = false, DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
     {
 #if NETSTANDARD2_0
         if (context is null)

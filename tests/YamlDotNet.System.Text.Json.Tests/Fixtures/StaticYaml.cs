@@ -16,6 +16,10 @@ internal static class StaticYaml
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.ConfigurationAndAttributes.PropertyNameModel))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.ConfigurationAndAttributes.PropertyOrderModel))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.ConfigurationAndAttributes.FieldModel))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.GeneratorCases.ConverterModel))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.GeneratorCases.InitOnlyModel))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.GeneratorCases.InterfaceDictionaryModel))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.GeneratorCases.Outer<string>.Nested<int>))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.IgnoreConditions.ConditionsModel))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.IgnoreConditions.DirectionalModel))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixtureModels.Enums.EnumModel))]
@@ -58,7 +62,7 @@ internal static class StaticYaml
         bool ignoreOrder = false,
         DefaultValuesHandling defaultValuesHandling = DefaultValuesHandling.Preserve)
     {
-        return YamlConverter.SerializeJson(
+        return YamlConverter.SerializeJsonStatic(
             json,
             Context,
             jsonSerializerOptions,

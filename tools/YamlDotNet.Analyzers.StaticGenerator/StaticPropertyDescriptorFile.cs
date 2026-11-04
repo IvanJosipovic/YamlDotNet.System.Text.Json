@@ -40,8 +40,8 @@ namespace YamlDotNet.Analyzers.StaticGenerator
             Write("public string Name { get; }");
             Write("public bool CanWrite { get; }");
             Write("public Type Type { get; }");
-            Write("public Type ConverterType { get; }");
-            Write("public Type TypeOverride { get; set; }");
+            Write("public Type? ConverterType { get; }");
+            Write("public Type? TypeOverride { get; set; }");
             Write("public bool AllowNulls { get; set; }");
             Write("public bool Required { get; }");
             Write("public int Order { get; set; }");

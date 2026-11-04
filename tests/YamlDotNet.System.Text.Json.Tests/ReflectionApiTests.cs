@@ -30,6 +30,7 @@ public class ReflectionApiTests
         YamlConverter.Serialize((object)model).ShouldContain("display-name: reflection");
         YamlConverter.Serialize(model).ShouldContain("display-name: reflection");
         YamlConverter.SerializeJson("{\"name\":\"reflection\"}").ShouldContain("name: reflection");
+        YamlConverter.SerializeJson("{\"name\":\"reflection\"}", null).ShouldContain("name: reflection");
         YamlConverter.SerializeJson("{\"name\":\"reflection\",}", new JsonSerializerOptions { AllowTrailingCommas = true })
             .ShouldContain("name: reflection");
 

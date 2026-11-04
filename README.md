@@ -77,6 +77,8 @@ var myObject = deserializer.Deserialize<MyType>(yaml)
 
 Use the generated `StaticContext` overloads for trimmed or Native AOT apps. Install the generator with `dotnet add package Vecc.YamlDotNet.Analyzers.StaticGenerator`, register every model and enum, and preserve members that carry System.Text.Json attributes:
 
+Nested model types require a generator package release that includes the nested-type-name fix. The published 18.1.0 generator does not include that fix, and no fixed minimum release is available yet.
+
 ```csharp
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
@@ -116,6 +118,8 @@ internal static class Program
     }
 }
 ```
+
+`AddSystemTextJson()` follows System.Text.Json field inclusion rules: public fields are ignored unless marked with `[JsonInclude]`. This changes the previous behavior for models that relied on YamlDotNet's default public-field handling.
 
 To use YamlDotNet's builder APIs with the same context:
 

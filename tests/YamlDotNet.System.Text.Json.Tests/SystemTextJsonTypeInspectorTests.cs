@@ -1,6 +1,7 @@
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TestFixtures;
 using YamlDotNet.Serialization;
 
 namespace YamlDotNet.System.Text.Json.Tests;
@@ -114,6 +115,61 @@ public class SystemTextJsonTypeInspectorTests
             new FixtureModels.ConfigurationAndAttributes.FieldModel()).ToArray();
 
         properties.Select(property => property.Name).ShouldBe(new[] { "included-field" });
+    }
+
+    [Fact]
+    public void StaticContextUsesJsonIncludeForPublicFields()
+    {
+        var yaml = StaticYaml.Serialize(new FixtureModels.ConfigurationAndAttributes.FieldModel());
+
+        yaml.ShouldContain("included-field: included");
+        yaml.ShouldNotContain("UnannotatedField");
+    }
+
+    [Fact]
+    public void StaticGeneratorPreservesYamlConverterAndMultipleYamlMemberArguments()
+    {
+        var model = new FixtureModels.GeneratorCases.ConverterModel { Value = "value" };
+        var context = new SharedYamlContext();
+        var converter = new FixtureModels.GeneratorCases.UppercaseStringConverter();
+        var serializer = new StaticSerializerBuilder(context)
+            .WithTypeConverter(converter)
+            .AddSystemTextJson()
+            .Build();
+        var yaml = serializer.Serialize(model);
+
+        yaml.ShouldBe("# Converted display value" + Environment.NewLine + "DISPLAY: VALUE" + Environment.NewLine);
+
+        var descriptor = context.GetTypeInspector()
+            .GetProperties(typeof(FixtureModels.GeneratorCases.ConverterModel), null)
+            .Single();
+        descriptor.ConverterType.ShouldBe(typeof(FixtureModels.GeneratorCases.UppercaseStringConverter));
+        descriptor.GetCustomAttribute<YamlMemberAttribute>()?.Description.ShouldBe("Converted display value");
+    }
+
+    [Fact]
+    public void StaticGeneratorSupportsInitOnlyPropertiesAndInterfaceDictionaries()
+    {
+        StaticYaml.Serialize(new FixtureModels.GeneratorCases.InitOnlyModel()).ShouldContain("Value: initial");
+
+        var model = StaticYaml.Deserialize<FixtureModels.GeneratorCases.InterfaceDictionaryModel>("Values:\n  key: value\n");
+        model.Values["key"].ShouldBe("value");
+    }
+
+    [Fact]
+    public void StaticGeneratorFormatsNestedGenericTypes()
+    {
+        var type = new FixtureModels.GeneratorCases.Outer<string>.Nested<int>
+        {
+            OuterValue = "outer",
+            InnerValue = 42,
+        };
+
+        var yaml = StaticYaml.Serialize(type);
+        var result = StaticYaml.Deserialize<FixtureModels.GeneratorCases.Outer<string>.Nested<int>>(yaml);
+
+        result.OuterValue.ShouldBe("outer");
+        result.InnerValue.ShouldBe(42);
     }
 
     [Fact]

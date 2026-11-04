@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
 namespace TestFixtures;
@@ -108,6 +110,50 @@ public static class FixtureModels
         }
     }
 
+    public static class GeneratorCases
+    {
+        public sealed class ConverterModel
+        {
+            [YamlConverter(typeof(UppercaseStringConverter))]
+            [YamlMember(Alias = "display", Description = "Converted display value", Order = 2)]
+            public string Value { get; set; } = "value";
+        }
+
+        public sealed class InitOnlyModel
+        {
+            public string Value { get; init; } = "initial";
+        }
+
+        public sealed class InterfaceDictionaryModel
+        {
+            public IDictionary<string, string> Values { get; set; } = null!;
+        }
+
+        public sealed class Outer<TOuter>
+        {
+            public sealed class Nested<TInner>
+            {
+                public TOuter OuterValue { get; set; } = default!;
+                public TInner InnerValue { get; set; } = default!;
+            }
+        }
+
+        public sealed class UppercaseStringConverter : IYamlTypeConverter
+        {
+            public bool Accepts(Type type) => type == typeof(string);
+
+            public object? ReadYaml(IParser parser, Type type, ObjectDeserializer rootDeserializer)
+            {
+                return parser.Consume<Scalar>().Value.ToUpperInvariant();
+            }
+
+            public void WriteYaml(IEmitter emitter, object? value, Type type, ObjectSerializer serializer)
+            {
+                emitter.Emit(new Scalar(value?.ToString()?.ToUpperInvariant() ?? string.Empty));
+            }
+        }
+    }
+
     public static class IgnoreConditions
     {
         public sealed class ConditionsModel
@@ -211,10 +257,8 @@ public static class FixtureModels
     {
         public sealed class JsonElementModel
         {
-#pragma warning disable YDNG001 // JsonElement values are handled by SystemTextJsonYamlTypeConverter.
             [JsonExtensionData]
             public Dictionary<string, JsonElement>? ExtensionData { get; set; }
-#pragma warning restore YDNG001
         }
 
         public sealed class ObjectModel
@@ -227,19 +271,15 @@ public static class FixtureModels
         {
             public string? before { get; set; }
 
-#pragma warning disable YDNG001 // JsonElement values are handled by SystemTextJsonYamlTypeConverter.
             [JsonExtensionData]
             public Dictionary<string, JsonElement>? ExtensionData { get; set; }
-#pragma warning restore YDNG001
 
             public string? after { get; set; }
         }
 
         public sealed class ContainerWithJsonElementExtensionData
         {
-#pragma warning disable YDNG001 // JsonElement values are handled by SystemTextJsonYamlTypeConverter.
             public IDictionary<string, JsonElement> ExtensionData { get; set; } = new Dictionary<string, JsonElement>();
-#pragma warning restore YDNG001
         }
 
         public static class DescriptorEdgeCases
@@ -370,6 +410,11 @@ public sealed class FixtureData : IDisposable
 [YamlSerializable(typeof(StaticApiProbeMode))]
 [YamlSerializable(typeof(FixtureModels.ConfigurationAndAttributes.PropertyNameModel))]
 [YamlSerializable(typeof(FixtureModels.ConfigurationAndAttributes.PropertyOrderModel))]
+[YamlSerializable(typeof(FixtureModels.ConfigurationAndAttributes.FieldModel))]
+[YamlSerializable(typeof(FixtureModels.GeneratorCases.ConverterModel))]
+[YamlSerializable(typeof(FixtureModels.GeneratorCases.InitOnlyModel))]
+[YamlSerializable(typeof(FixtureModels.GeneratorCases.InterfaceDictionaryModel))]
+[YamlSerializable(typeof(FixtureModels.GeneratorCases.Outer<string>.Nested<int>))]
 [YamlSerializable(typeof(FixtureModels.IgnoreConditions.ConditionsModel))]
 [YamlSerializable(typeof(FixtureModels.IgnoreConditions.DirectionalModel))]
 [YamlSerializable(typeof(FixtureModels.Enums.EnumModel))]

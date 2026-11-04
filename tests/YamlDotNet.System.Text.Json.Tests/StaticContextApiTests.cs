@@ -10,7 +10,7 @@ public class StaticContextApiTests
     {
         Should.Throw<ArgumentNullException>(() => YamlConverter.Serialize("value", null!))
             .ParamName.ShouldBe("context");
-        Should.Throw<ArgumentNullException>(() => YamlConverter.SerializeJson("{}", (YamlDotNet.Serialization.StaticContext)null!))
+        Should.Throw<ArgumentNullException>(() => YamlConverter.SerializeJsonStatic("{}", null!))
             .ParamName.ShouldBe("context");
         Should.Throw<ArgumentNullException>(() => YamlConverter.Deserialize<string>("value", null!))
             .ParamName.ShouldBe("context");
@@ -26,7 +26,7 @@ public class StaticContextApiTests
             MaxDepth = 32,
         };
 
-        YamlConverter.SerializeJson("""
+        YamlConverter.SerializeJsonStatic("""
             { // accepted by the supplied options
               "name": "api",
             }

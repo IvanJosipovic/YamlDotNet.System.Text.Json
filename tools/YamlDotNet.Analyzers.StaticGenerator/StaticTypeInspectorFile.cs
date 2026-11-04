@@ -20,6 +20,7 @@
 // SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -61,11 +62,11 @@ namespace YamlDotNet.Analyzers.StaticGenerator
                 Write("{"); Indent();
                 foreach (var field in classObject.FieldSymbols)
                 {
-                    WritePropertyDescriptor(field.Name, field.Type, !field.IsReadOnly, field.GetAttributes(), field.IsRequired, ',');
+                    WritePropertyDescriptor(field.Name, field.Type, field.IsReadOnly, field.GetAttributes(), field.IsRequired, ',', isField: true);
                 }
                 foreach (var property in classObject.PropertySymbols)
                 {
-                    WritePropertyDescriptor(property.Name, property.Type, property.SetMethod == null, property.GetAttributes(), property.IsRequired, ',');
+                    WritePropertyDescriptor(property.Name, property.Type, property.SetMethod == null || property.SetMethod.IsInitOnly, property.GetAttributes(), property.IsRequired, ',');
                 }
                 UnIndent(); Write("};");
                 UnIndent(); Write("}");
@@ -91,7 +92,7 @@ namespace YamlDotNet.Analyzers.StaticGenerator
                 foreach (var property in classObject.PropertySymbols)
                 {
                     Write($"if (name == \"{property.Name}\") return ", false);
-                    WritePropertyDescriptor(property.Name, property.Type, property.SetMethod == null, property.GetAttributes(), property.IsRequired, ';');
+                    WritePropertyDescriptor(property.Name, property.Type, property.SetMethod == null || property.SetMethod.IsInitOnly, property.GetAttributes(), property.IsRequired, ';');
                 }
                 Write("if (caseInsensitivePropertyMatching)");
                 Write("{"); Indent();
@@ -103,7 +104,7 @@ namespace YamlDotNet.Analyzers.StaticGenerator
                 foreach (var property in classObject.PropertySymbols)
                 {
                     Write($"if (name.Equals(\"{property.Name}\", System.StringComparison.OrdinalIgnoreCase)) return ");
-                    WritePropertyDescriptor(property.Name, property.Type, property.SetMethod == null, property.GetAttributes(), property.IsRequired, ';');
+                    WritePropertyDescriptor(property.Name, property.Type, property.SetMethod == null || property.SetMethod.IsInitOnly, property.GetAttributes(), property.IsRequired, ';');
                 }
 
                 UnIndent(); Write("}");
@@ -197,53 +198,49 @@ namespace YamlDotNet.Analyzers.StaticGenerator
             UnIndent(); Write("}");
         }
 
-        private void WritePropertyDescriptor(string name, ITypeSymbol type, bool isReadonly, ImmutableArray<AttributeData> attributes, bool isRequired, char finalChar)
+        private void WritePropertyDescriptor(string name, ITypeSymbol type, bool isReadonly, ImmutableArray<AttributeData> attributes, bool isRequired, char finalChar, bool isField = false)
         {
             var allowNulls = type.NullableAnnotation.HasFlag(NullableAnnotation.Annotated) && context.Compilation.Options.NullableContextOptions.AnnotationsEnabled();
             AttributeData? yamlConverterAttribute = null;
             Write($"new StaticPropertyDescriptor(_typeResolver, accessor, \"{name}\", {(!isReadonly).ToString().ToLower()}, typeof({type.GetFullName().Replace("?", string.Empty)}), new Attribute[] {{");
+
+            // A generated field descriptor can outlive its reflection metadata under trimming.
+            // Preserve System.Text.Json's default field exclusion directly on the descriptor.
+            if (isField
+                && context.Compilation.GetTypeByMetadataName("System.Text.Json.Serialization.JsonIgnoreAttribute") != null
+                && !attributes.Any(attribute => attribute.AttributeClass?.ToDisplayString() == "System.Text.Json.Serialization.JsonIncludeAttribute"))
+            {
+                Write("new global::System.Text.Json.Serialization.JsonIgnoreAttribute(),");
+            }
+
             foreach (var attribute in attributes)
             {
                 switch (attribute.AttributeClass?.ToDisplayString())
                 {
-                    case "YamlDotNet.Serialization.YamlConverterAttribute()":
+                    case "YamlDotNet.Serialization.YamlConverterAttribute":
                         yamlConverterAttribute = attribute;
                         break;
-                    case "YamlDotNet.Serialization.YamlIgnore":
-                        Write("new YamlDotNet.Serialization.YamlIgnoreAttribute(),");
-                        break;
                     case "YamlDotNet.Serialization.YamlMemberAttribute":
-                        Write("new YamlDotNet.Serialization.YamlMemberAttribute() {");
-                        for (var index = 0; index < attribute.NamedArguments.Length; index++)
+                        var namedArguments = new List<string>();
+                        foreach (var attributeData in attribute.NamedArguments)
                         {
-                            if (index > 0)
+                            var assignment = attributeData.Key switch
                             {
-                                Write(", ");
-                            }
-                            var attributeData = attribute.NamedArguments[index];
-                            switch (attributeData.Key)
+                                "Description" => $"Description = {attributeData.Value.ToCSharpString()}",
+                                "Order" => $"Order = {attributeData.Value.Value}",
+                                "Alias" => $"Alias = {attributeData.Value.ToCSharpString()}",
+                                "ApplyNamingConventions" => $"ApplyNamingConventions = {attributeData.Value.ToCSharpString()}",
+                                "DefaultValuesHandling" => $"DefaultValuesHandling = (YamlDotNet.Serialization.DefaultValuesHandling){attributeData.Value.Value}",
+                                "ScalarStyle" => $"ScalarStyle = (YamlDotNet.Core.ScalarStyle){attributeData.Value.Value}",
+                                _ => null,
+                            };
+
+                            if (assignment != null)
                             {
-                                case "Description":
-                                    Indent(); Write($"Description = {attributeData.Value.ToCSharpString()}"); UnIndent();
-                                    break;
-                                case "Order":
-                                    Indent(); Write($"Order = {attributeData.Value.Value}"); UnIndent();
-                                    break;
-                                case "Alias":
-                                    Indent(); Write($"Alias = {attributeData.Value.ToCSharpString()}"); UnIndent();
-                                    break;
-                                case "ApplyNamingConventions":
-                                    Indent(); Write($"ApplyNamingConventions = {attributeData.Value.ToCSharpString()}"); UnIndent();
-                                    break;
-                                case "DefaultValuesHandling":
-                                    Indent(); Write($"DefaultValuesHandling = (YamlDotNet.Serialization.DefaultValuesHandling){attributeData.Value.Value}"); UnIndent();
-                                    break;
-                                case "ScalarStyle":
-                                    Indent(); Write($"ScalarStyle = (YamlDotNet.Core.ScalarStyle){attributeData.Value.Value}"); UnIndent();
-                                    break;
+                                namedArguments.Add(assignment);
                             }
                         }
-                        Write($"}},");
+                        Write($"new YamlDotNet.Serialization.YamlMemberAttribute() {{ {string.Join(", ", namedArguments)} }},");
                         break;
                 }
             }
@@ -255,8 +252,8 @@ namespace YamlDotNet.Analyzers.StaticGenerator
             else
             {
                 var argument = yamlConverterAttribute.ConstructorArguments[0];
-                var converterType = (Type)argument.Value!;
-                Write($"typeof({converterType.FullName})", false);
+                var converterType = (ITypeSymbol)argument.Value!;
+                Write($"typeof({converterType.GetFullName().Replace("?", string.Empty)})", false);
             }
             Write($"){finalChar}"); //TODO: replace null with the class for the typeconverter.
         }

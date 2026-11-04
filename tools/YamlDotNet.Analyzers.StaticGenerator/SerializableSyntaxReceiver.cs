@@ -32,6 +32,7 @@ namespace YamlDotNet.Analyzers.StaticGenerator
         public List<string> Log { get; } = new();
         public Dictionary<string, ClassObject> Classes { get; } = new Dictionary<string, ClassObject>();
         public Dictionary<ITypeSymbol, List<EnumMappings>> EnumMappings { get; } = new Dictionary<ITypeSymbol, List<EnumMappings>>(SymbolEqualityComparer.Default);
+        public List<INamedTypeSymbol> YamlStaticContextTypes { get; } = new();
         public INamedTypeSymbol? YamlStaticContextType { get; set; }
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
@@ -52,7 +53,12 @@ namespace YamlDotNet.Analyzers.StaticGenerator
                     var attributes = classSymbol.GetAttributes();
                     if (attributes.Any(attribute => attribute.AttributeClass?.ToDisplayString() == "YamlDotNet.Serialization.YamlStaticContextAttribute"))
                     {
-                        YamlStaticContextType = classSymbol;
+                        if (!YamlStaticContextTypes.Any(type => SymbolEqualityComparer.Default.Equals(type, classSymbol)))
+                        {
+                            YamlStaticContextTypes.Add(classSymbol);
+                        }
+
+                        YamlStaticContextType ??= classSymbol;
 
                         var types =
                             attributes.Where(attribute => attribute.AttributeClass?.ToDisplayString() == "YamlDotNet.Serialization.YamlSerializableAttribute"
@@ -192,7 +198,8 @@ namespace YamlDotNet.Analyzers.StaticGenerator
                 Classes.Add(sanitizedTypeName, new ClassObject(sanitizedTypeName, (INamedTypeSymbol)type, isListOverride: true));
                 CheckForSupportedGeneric(((INamedTypeSymbol)type).TypeArguments[0]);
             }
-            else if (typeName.StartsWith("System.Collections.Generic.IReadOnlyDictionary"))
+            else if (typeName.StartsWith("System.Collections.Generic.IDictionary")
+                || typeName.StartsWith("System.Collections.Generic.IReadOnlyDictionary"))
             {
                 Classes.Add(sanitizedTypeName, new ClassObject(sanitizedTypeName, (INamedTypeSymbol)type, isDictionaryOverride: true));
                 CheckForSupportedGeneric(((INamedTypeSymbol)type).TypeArguments[1]);
