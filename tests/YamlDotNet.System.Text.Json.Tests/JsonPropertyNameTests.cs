@@ -4,20 +4,12 @@ namespace YamlDotNet.System.Text.Json.Tests;
 
 public partial class JsonPropertyNameTests
 {
-    public class TestModel
-    {
-        [JsonPropertyName("MyNewPropName")]
-        public string MyProp { get; set; } = nameof(TestModel.MyProp);
-
-        public string MyProp2 { get; set; } = nameof(TestModel.MyProp2);
-    }
-
     [Fact]
     public void Serialize()
     {
-        var model = new TestModel();
+        var model = new FixtureModels.ConfigurationAndAttributes.PropertyNameModel();
 
-        var yaml = YamlConverter.Serialize(model);
+        var yaml = StaticYaml.Serialize(model);
 
         var expected = """
                           MyNewPropName: MyProp
@@ -36,7 +28,7 @@ public partial class JsonPropertyNameTests
 
                     """;
 
-        var model = YamlConverter.Deserialize<TestModel>(yaml);
+        var model = StaticYaml.Deserialize<FixtureModels.ConfigurationAndAttributes.PropertyNameModel>(yaml);
 
         model.MyProp.ShouldBe("test");
         model.MyProp2.ShouldBe("test2");

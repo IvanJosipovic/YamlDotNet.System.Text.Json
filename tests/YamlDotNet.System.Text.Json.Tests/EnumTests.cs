@@ -4,39 +4,20 @@ namespace YamlDotNet.System.Text.Json.Tests;
 
 public class EnumTests
 {
-    public class TestModel
-    {
-        public TestEnum? Enum { get; set; }
-
-        public TestEnum? EnumName { get; set; }
-
-        public TestEnum? EnumNull { get; set; }
-
-        public IList<TestEnum>? EnumList { get; set; }
-    }
-
-    public enum TestEnum
-    {
-        First,
-        [JsonStringEnumMemberName("val2")]
-        Second,
-        Third
-    }
-
     [Fact]
     public void EnumSerialize()
     {
-        var model = new TestModel()
+        var model = new FixtureModels.Enums.EnumModel()
         {
-            Enum = TestEnum.Third,
-            EnumName = TestEnum.Second,
+            Enum = FixtureModels.Enums.TestEnum.Third,
+            EnumName = FixtureModels.Enums.TestEnum.Second,
             EnumList =
             [
-                TestEnum.Second
+                FixtureModels.Enums.TestEnum.Second
             ]
         };
 
-        var yaml = YamlConverter.Serialize(model);
+        var yaml = StaticYaml.Serialize(model);
 
         var expected = """
                           Enum: Third
@@ -61,12 +42,12 @@ public class EnumTests
 
                     """;
 
-        var model = YamlConverter.Deserialize<TestModel>(yaml);
+        var model = StaticYaml.Deserialize<FixtureModels.Enums.EnumModel>(yaml);
 
-        model.Enum.ShouldBe(TestEnum.Third);
-        model.EnumName.ShouldBe(TestEnum.Second);
+        model.Enum.ShouldBe(FixtureModels.Enums.TestEnum.Third);
+        model.EnumName.ShouldBe(FixtureModels.Enums.TestEnum.Second);
         model.EnumNull.ShouldBeNull();
         model.EnumList!.Count.ShouldBe(1);
-        model.EnumList[0].ShouldBe(TestEnum.Second);
+        model.EnumList[0].ShouldBe(FixtureModels.Enums.TestEnum.Second);
     }
 }

@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using YamlDotNet.Core;
@@ -138,7 +139,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
 
                     if (property.Type.IsEnum && GetCustomAttribute<global::System.ComponentModel.DefaultValueAttribute>(inspectedProperty) == null)
                     {
-                        var enumDefault = Array.CreateInstance(property.Type, 1).GetValue(0)!;
+                        var enumDefault = Enum.ToObject(property.Type, 0);
                         return [new EnumDefaultValuePropertyDescriptor(descriptor, new global::System.ComponentModel.DefaultValueAttribute(enumDefault))];
                     }
 
@@ -158,6 +159,12 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     private static bool ShouldIncludeProperty(InspectedProperty inspectedProperty, object? container)
     {
         var property = inspectedProperty.Descriptor;
+        if (inspectedProperty.ReflectedMember is FieldInfo
+            && GetCustomAttribute<JsonIncludeAttribute>(inspectedProperty) == null)
+        {
+            return false;
+        }
+
         var ignore = GetCustomAttribute<JsonIgnoreAttribute>(inspectedProperty);
         if (ignore == null)
         {
@@ -176,10 +183,28 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         };
     }
 
+#if !NETSTANDARD2_0
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated StaticContext registrations root declared model property types; reflection-based descriptor graphs require callers to preserve their types.")]
+#endif
     private static bool IsDefaultValue(IPropertyDescriptor property, object container)
     {
         var value = property.Read(container).Value;
-        return value == null || property.Type.IsValueType && value.Equals(Array.CreateInstance(property.Type, 1).GetValue(0));
+        if (value == null)
+        {
+            return true;
+        }
+
+        if (!property.Type.IsValueType || Nullable.GetUnderlyingType(property.Type) != null)
+        {
+            return false;
+        }
+
+#if NETSTANDARD2_0
+        var defaultValue = Array.CreateInstance(property.Type, 1).GetValue(0);
+#else
+        var defaultValue = RuntimeHelpers.GetUninitializedObject(property.Type);
+#endif
+        return value.Equals(defaultValue);
     }
 
     /// <inheritdoc />
@@ -266,7 +291,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     private IReadOnlyList<InspectedProperty> GetInspectedProperties(Type type, object? container)
     {
         return _innerTypeDescriptor.GetProperties(type, container)
-            .Select(property => new InspectedProperty(property, FindMostDerivedProperty(type, property.Name)))
+            .Select(property => new InspectedProperty(property, FindMostDerivedMember(type, property.Name)))
             .ToArray();
     }
 
@@ -274,7 +299,7 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "ITypeInspector does not propagate DTO property preservation requirements. StaticContext registrations root public DTO properties.")]
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "ITypeInspector does not propagate DTO property preservation requirements. StaticContext registrations root public DTO properties.")]
 #endif
-    private static PropertyInfo? FindMostDerivedProperty(Type type, string name)
+    private static MemberInfo? FindMostDerivedMember(Type type, string name)
     {
         for (var currentType = type; currentType != null; currentType = currentType.BaseType)
         {
@@ -285,6 +310,14 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
             {
                 return property;
             }
+
+            var field = currentType
+                .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+                .FirstOrDefault(candidate => candidate.Name == name);
+            if (field != null)
+            {
+                return field;
+            }
         }
 
         return null;
@@ -294,20 +327,20 @@ public sealed class SystemTextJsonTypeInspector : ITypeInspector
         where TAttribute : Attribute
     {
         return inspectedProperty.Descriptor.GetCustomAttribute<TAttribute>()
-            ?? inspectedProperty.ReflectedProperty?.GetCustomAttribute<TAttribute>();
+            ?? inspectedProperty.ReflectedMember?.GetCustomAttribute<TAttribute>();
     }
 
     private sealed class InspectedProperty
     {
-        public InspectedProperty(IPropertyDescriptor descriptor, PropertyInfo? reflectedProperty)
+        public InspectedProperty(IPropertyDescriptor descriptor, MemberInfo? reflectedMember)
         {
             Descriptor = descriptor;
-            ReflectedProperty = reflectedProperty;
+            ReflectedMember = reflectedMember;
         }
 
         public IPropertyDescriptor Descriptor { get; }
 
-        public PropertyInfo? ReflectedProperty { get; }
+        public MemberInfo? ReflectedMember { get; }
     }
 
     private sealed class EnumDefaultValuePropertyDescriptor : IPropertyDescriptor
